@@ -7,6 +7,9 @@ public interface IGamesService
 {
     //create games
     bool createGames(AddGamesDTO dto,out string message);
-   
+
+    List<DisplayGamesDTO> displayGames();
+
+    bool checkAnswer(SubmitAnswerDTO answerDTO , out string message);
 
 }

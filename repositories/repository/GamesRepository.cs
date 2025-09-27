@@ -1,6 +1,7 @@
 using WebApplication2.data;
 using WebApplication2.models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Mozilla;
 
 
 namespace WebApplication2.repositories.repository
@@ -18,11 +19,29 @@ namespace WebApplication2.repositories.repository
 
         }
 
+        //add games
         public  void AddGames(Games games) { 
         
             _context.Games.Add(games);
             _context.SaveChanges();
         }
+
+
+        //Display Games
+        public List<Games> GetAllGames() { 
+        
+            return _context.Games.ToList();
+
+        }
+
+        //get game by id
+        public Games? getGamesById(Guid id) {
+
+            return _context.Games.FirstOrDefault(g => g.id == id);
+        
+        }
+
+
 
     }
 

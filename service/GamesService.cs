@@ -7,12 +7,14 @@ namespace WebApplication2.service
     public class GamesService : IGamesService
     {
         private readonly IGamesRepository _gameRepository;
+        private readonly Random _random = new Random();
+
 
         public GamesService(IGamesRepository gameRepository)
         {
             _gameRepository = gameRepository;
         }
-
+        //create games
         public bool createGames(AddGamesDTO dto, out string message)
         {
             try
@@ -43,5 +45,58 @@ namespace WebApplication2.service
                 return false;
             }
         }
+
+
+        //display games
+        public List<DisplayGamesDTO> displayGames() { 
+
+            var display = _gameRepository.GetAllGames();
+
+            var displayList = display.Select(d => new DisplayGamesDTO {
+
+                photo = d.photo != null ? Convert.ToBase64String(d.photo) : string.Empty,
+                product_name = d.product_name,
+                unit = d.unit,
+                mock_price = GenerateMockPrice(d.correct_price)          
+            }).ToList();
+
+            return displayList;
+        
+        }
+
+
+        //generate mock price
+        private int GenerateMockPrice(decimal realPrice)
+        {
+          
+            int min = Math.Max(0, (int)realPrice - 50); 
+            int max = (int)realPrice + 100;
+
+            return _random.Next(min, max + 1); 
+        }
+
+
+        //Cheking the answer if correct
+        public bool checkAnswer(SubmitAnswerDTO answerDTO, out string message) {
+
+            var answer = _gameRepository.getGamesById(answerDTO.gameId);
+
+            if (answer == null) {
+
+                message = "game not found";
+                return false;
+            
+            }
+            bool isFair = answerDTO.mock_answer == answer.correct_price;
+
+            bool userCorrect = (answerDTO.UserChoice == "Fair" && isFair) || (answerDTO.UserChoice == "Fake" && !isFair);
+
+            message = userCorrect ? "Correct" : "Wrong";
+
+            return userCorrect;
+
+        
+        }
+
     }
 }

@@ -19,7 +19,7 @@ namespace WebApplication2.Controllers {
                 }
 
 
-
+        //add games
         [HttpPost("AddGames")]
         public IActionResult Add([FromBody] AddGamesDTO dto)
         {
@@ -28,6 +28,27 @@ namespace WebApplication2.Controllers {
 
             return BadRequest(new { success = false, message });
         }
+
+
+        //display game
+        [HttpGet("displayGames")]
+        public IActionResult display() {
+            
+            var games = _gamesService.displayGames();
+            return Ok(games);
+        
+        }
+
+        [HttpPost("checkAnswer")]
+        public IActionResult submitAnswer([FromBody] SubmitAnswerDTO dto) {
+
+            if (_gamesService.checkAnswer(dto, out string message))
+                return Ok(new { success = true, message });
+
+            return Ok(new { success = false, message });
+        }
+
+
 
     }
 
