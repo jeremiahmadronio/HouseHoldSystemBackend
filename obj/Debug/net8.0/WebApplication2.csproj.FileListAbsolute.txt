@@ -179,6 +179,7 @@ C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\WebApplication2.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\WebApplication2.pdb
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Humanizer.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\MailKit.dll
@@ -204,10 +205,6 @@ C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.Extensions.Primitives.dll
-C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
-C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
-C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
-C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\MimeKit.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\Mono.TextTemplating.dll
@@ -302,6 +299,7 @@ C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\WebApplication2.csproj.CoreCompileInputs.cache
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\WebApplication2.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\WebApplication2.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\WebApplication2.sourcelink.json
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\rjimswa.dswa.cache.json
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json

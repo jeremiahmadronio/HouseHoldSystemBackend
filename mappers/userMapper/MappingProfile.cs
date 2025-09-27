@@ -18,6 +18,10 @@ namespace WebApplication2.mappers.userMapper
             CreateMap<CreateUserDTO,User>();
 
 
+            CreateMap<User, UserProfileDTO>()
+               .ForMember(dest => dest.Photo,
+                          opt => opt.MapFrom(src => src.photo != null ? Convert.ToBase64String(src.photo) : null));
+
 
         }
     }

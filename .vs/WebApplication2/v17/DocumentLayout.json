@@ -1,0 +1,122 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|c:\\users\\home\\onedrive\\documents\\runningprogram\\webapplication2\\webapplication2\\dto\\userdto\\resetpassworddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|solutionrelative:dto\\userdto\\resetpassworddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|c:\\users\\home\\onedrive\\documents\\runningprogram\\webapplication2\\webapplication2\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|solutionrelative:controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|c:\\users\\home\\onedrive\\documents\\runningprogram\\webapplication2\\webapplication2\\dto\\userdto\\verifyemail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|solutionrelative:dto\\userdto\\verifyemail.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|c:\\users\\home\\onedrive\\documents\\runningprogram\\webapplication2\\webapplication2\\dto\\userdto\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|solutionrelative:dto\\userdto\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|c:\\users\\home\\onedrive\\documents\\runningprogram\\webapplication2\\webapplication2\\dto\\userdto\\getuserdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|solutionrelative:dto\\userdto\\getuserdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|c:\\users\\home\\onedrive\\documents\\runningprogram\\webapplication2\\webapplication2\\dto\\userdto\\createuserdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C69DDCE5-63FA-A520-F5E2-48BAD5DFA536}|WebApplication2.csproj|solutionrelative:dto\\userdto\\createuserdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UserController.cs",
+              "DocumentMoniker": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\Controllers\\UserController.cs",
+              "RelativeDocumentMoniker": "Controllers\\UserController.cs",
+              "ToolTip": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\Controllers\\UserController.cs",
+              "RelativeToolTip": "Controllers\\UserController.cs",
+              "ViewState": "AgIAAD0AAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T13:36:39.325Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "VerifyEmail.cs",
+              "DocumentMoniker": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\VerifyEmail.cs",
+              "RelativeDocumentMoniker": "dto\\userDTO\\VerifyEmail.cs",
+              "ToolTip": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\VerifyEmail.cs",
+              "RelativeToolTip": "dto\\userDTO\\VerifyEmail.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T13:36:34.978Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ResetPasswordDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\ResetPasswordDTO.cs",
+              "RelativeDocumentMoniker": "dto\\userDTO\\ResetPasswordDTO.cs",
+              "ToolTip": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\ResetPasswordDTO.cs",
+              "RelativeToolTip": "dto\\userDTO\\ResetPasswordDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T13:36:31.786Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "LoginDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\LoginDTO.cs",
+              "RelativeDocumentMoniker": "dto\\userDTO\\LoginDTO.cs",
+              "ToolTip": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\LoginDTO.cs",
+              "RelativeToolTip": "dto\\userDTO\\LoginDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T13:36:30.657Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GetUserDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\GetUserDTO.cs",
+              "RelativeDocumentMoniker": "dto\\userDTO\\GetUserDTO.cs",
+              "ToolTip": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\GetUserDTO.cs",
+              "RelativeToolTip": "dto\\userDTO\\GetUserDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T13:36:20.682Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CreateUserDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\CreateUserDTO.cs",
+              "RelativeDocumentMoniker": "dto\\userDTO\\CreateUserDTO.cs",
+              "ToolTip": "C:\\Users\\Home\\OneDrive\\Documents\\RunningProgram\\WebApplication2\\WebApplication2\\dto\\userDTO\\CreateUserDTO.cs",
+              "RelativeToolTip": "dto\\userDTO\\CreateUserDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-15T13:34:41.287Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

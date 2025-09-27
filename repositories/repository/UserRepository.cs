@@ -27,7 +27,7 @@ namespace WebApplication2.repositories.repository
         }
 
         //login
-        public User GetUserByEmail(string email) {
+        public User? GetUserByEmail(string email) {
 
             return _context.Users.FirstOrDefault(u => u.email == email);
         }
@@ -36,6 +36,13 @@ namespace WebApplication2.repositories.repository
         public void AddUser(User user)
         {
             _context.Users.Add(user);
+            _context.SaveChanges();
+        }
+
+        //resetPass
+        public void UpdateUser(User user) { 
+        
+            _context.Update(user);
             _context.SaveChanges();
         }
 

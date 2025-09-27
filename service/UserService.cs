@@ -11,10 +11,13 @@ namespace WebApplication2.service
     public class UserService : IUserService
     {
         private readonly  IUserRepository _userRepository;
+        private readonly IAdminRepository _adminRepository;
         private readonly IMapper _mapper;
-        public UserService(IUserRepository userRepository , IMapper mapper)
+
+        public UserService(IUserRepository userRepository , IAdminRepository adminRepository, IMapper mapper)
         {
             _userRepository = userRepository;
+            _adminRepository = adminRepository;
             _mapper = mapper;
         }
 
@@ -34,16 +37,24 @@ namespace WebApplication2.service
         }
 
         //login
-        public bool Login(LoginDTO request) {
-        
-            var user = _userRepository.GetUserByEmail(request.email);
-            if (user == null || user.password != request.password ) { 
-
-                return false;
+        public (bool Success, string? Role) Login(LoginDTO request)
+        {
+            var admin = _adminRepository.GetUserByEmail(request.email);
+            if (admin != null && admin.password == request.password)
+            {
+                return (true, "ADMIN");
             }
-            return true;
+
+            var user = _userRepository.GetUserByEmail(request.email);
+            if (user != null && user.password == request.password)
+            {
+                return (true, "USER");
+            }
+
+            return (false, null);
         }
 
+        //create User
         public bool CreateUser(CreateUserDTO dto, out string message)
         {
             if (_userRepository.GetUserByEmail(dto.email) != null)
@@ -59,6 +70,32 @@ namespace WebApplication2.service
             return true;
         }
 
+
+        public bool ResetPassword(String email, String password) {
+
+            var user = _userRepository.GetUserByEmail(email);
+
+            if (user == null) return false;
+
+            user.password = password;
+            _userRepository.UpdateUser(user);
+
+            return true;
+        }
+
+
+        public UserProfileDTO? GetUserProfile(String email) {
+
+            var user = _userRepository.GetUserByEmail(email);
+            if (user == null) return null;
+
+            return _mapper.Map<UserProfileDTO>(user);
+            {
+                
+            }
+
+        }
+        
 
     }
 }

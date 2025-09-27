@@ -8,9 +8,11 @@ namespace WebApplication2.repositories;
 
     bool EmailExists(string email);
 
-    User GetUserByEmail(string email);
+    User? GetUserByEmail(string email);
 
     void AddUser(User user);
+
+    void UpdateUser(User user);
 
 
 }

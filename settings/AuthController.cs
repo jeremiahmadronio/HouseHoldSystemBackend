@@ -24,21 +24,33 @@ namespace WebApplication2.settings
 
 
         [HttpPost("send-verification")]
-        public async Task<IActionResult> SendVerification([FromBody] SendEmailRequest req)
+        public IActionResult SendVerification([FromBody] SendEmailRequest req)
         {
-            var code = new Random().Next(100000, 999999).ToString();
+            var newCode = new Random().Next(100000, 999999).ToString();
 
-            _cache.Set($"VERIF_{req.Email}", code, TimeSpan.FromMinutes(5));
+            _cache.Remove($"VERIF_{req.Email}");
 
-            await _emailService.SendVerificationCodeAsync(req.Email, code);
+            _cache.Set($"VERIF_{req.Email}", newCode, TimeSpan.FromMinutes(5));
 
-            return Ok(new { message = "Verification sent" });
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendVerificationCodeAsync(req.Email, newCode);
+                }
+                catch
+                {
+                }
+            });
+
+            return Ok(new { message = "Verification sent " });
         }
+
 
         [HttpPost("verify-code")]
         public IActionResult Verify([FromBody] VerifyRequest req)
         {
-            if (_cache.TryGetValue($"VERIF_{req.Email}", out string stored) && stored == req.Code)
+            if (_cache.TryGetValue($"VERIF_{req.Email}", out string? stored) && stored == req.Code)
             {
                 _cache.Remove($"VERIF_{req.Email}");
                 return Ok(new { verified = true });

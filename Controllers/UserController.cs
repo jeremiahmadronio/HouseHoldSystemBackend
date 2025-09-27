@@ -13,7 +13,7 @@ namespace WebApplication2.Controllers
 
         private readonly IUserService _userService;
 
-        public UserController(IUserService userService) {
+        public UserController(IUserService userService) {           
 
             _userService = userService;
         }
@@ -41,32 +41,67 @@ namespace WebApplication2.Controllers
 
 
         }
-        //login
+
+        //Login
         [HttpPost("login")]
-        public IActionResult Login( [FromBody] LoginDTO request)
+        public IActionResult Login([FromBody] LoginDTO request)
         {
-            bool success = _userService.Login(request);
+            var (success, role) = _userService.Login(request);
 
             if (!success)
-                return Unauthorized("Invalid email or password");
+            {
+                return Unauthorized(new { message = "Invalid email or password" });
+            }
 
-            return Ok("Login successful");
-
+            return Ok(new
+            {
+                message = "Login successful",
+                role = role ?? "Uknown"
+            });
         }
 
 
-        //createuser    username password email
+        //create User
         [HttpPost("create-user")]
-
-        public IActionResult createUser([FromBody] CreateUserDTO request)
+        public IActionResult CreateUser([FromBody] CreateUserDTO request)
         {
             bool success = _userService.CreateUser(request, out string message);
 
-            if (!success) return BadRequest(message);
+            if (!success)
+                return BadRequest(new { message });
 
-            return Ok(message);
+            return Ok(new { message });
+        }
+
+
+        //reset-password
+        [HttpPost("reset-password")]
+        public IActionResult updateUser([FromBody] ResetPasswordDTO request) { 
+
+            var success = _userService.ResetPassword(request.email , request.password);
+
+            if (success)
+                return Ok(new { message = "Password reset Successfully"});
+
+            return BadRequest(new { message = "User not found" });
+        }
+
+
+        //display Settings
+        [HttpGet("userProfile")]
+        public ActionResult<UserProfileDTO> displayUserSettings([FromQuery] String email) { 
+        
+            var profile = _userService.GetUserProfile(email);
+
+            if(profile == null)
+                return NotFound("User not found");
+
+
+            return Ok(profile);
+                
 
         }
+       
 
     }
 }
