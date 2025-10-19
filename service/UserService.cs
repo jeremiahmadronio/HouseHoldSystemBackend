@@ -71,6 +71,25 @@ namespace WebApplication2.service
         }
 
 
+
+        public bool CreateUsers(CreateUserAdminDTO dto, out string message)
+        {
+            if (_userRepository.GetUserByEmail(dto.email) != null)
+            {
+                message = "Email already exists";
+                return false;
+            }
+
+            var user = _mapper.Map<User>(dto);
+            _userRepository.AddUser(user);
+
+            message = "User created successfully";
+            return true;
+        }
+
+
+
+
         public bool ResetPassword(String email, String password) {
 
             var user = _userRepository.GetUserByEmail(email);
@@ -95,7 +114,51 @@ namespace WebApplication2.service
             }
 
         }
-        
+
+
+        public bool UpdateUserInfo(EditUserDTO dto, out string message)
+        {
+            var user = _userRepository.GetUserByEmail(dto.Email);
+            if (user == null)
+            {
+                message = "User not found";
+                return false;
+            }
+
+            
+            user.username = dto.Username;
+            user.password = dto.Password;
+            user.email = dto.Email;
+            user.phone = dto.Phone;
+
+            _userRepository.UpdateUser(user);
+
+            message = "User updated successfully";
+            return true;
+        }
+
+
+
+        public bool DeleteUserByUsername(string username, out string message)
+        {
+            var user = _userRepository.GetUserByUsername(username);
+            if (user == null)
+            {
+                message = "User not found";
+                return false;
+            }
+
+            _userRepository.DeleteUser(user);
+            message = "User deleted successfully";
+            return true;
+        }
+
+
+
+
+
+
+
 
     }
 }

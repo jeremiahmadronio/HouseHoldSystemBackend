@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\dto",
+    "\\dto\\GamesDTO",
+    "\\dto\\ProductPriceDTO",
+    "\\models",
+    "\\repositories",
+    "\\repositories\\interface",
+    "\\repositories\\repository",
+    "\\service",
+    "\\service\\interface"
+  ],
+  "SelectedNode": "\\service\\ProductsService.cs",
+  "PreviewInSolutionExplorer": false
+}

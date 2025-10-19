@@ -224,6 +224,11 @@ C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\System.Text.Encodings.Web.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\System.Text.Json.dll
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\UglyToad.PdfPig.dll
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\UglyToad.PdfPig.Core.dll
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\UglyToad.PdfPig.Fonts.dll
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\UglyToad.PdfPig.Tokenization.dll
+C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\UglyToad.PdfPig.Tokens.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\cs\Microsoft.CodeAnalysis.resources.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\de\Microsoft.CodeAnalysis.resources.dll
 C:\Users\Home\OneDrive\Documents\RunningProgram\WebApplication2\WebApplication2\bin\Debug\net8.0\es\Microsoft.CodeAnalysis.resources.dll

@@ -16,6 +16,7 @@ namespace WebApplication2.mappers.userMapper
 
             //createUser
             CreateMap<CreateUserDTO,User>();
+            CreateMap<CreateUserAdminDTO, User>();
 
 
             CreateMap<User, UserProfileDTO>()

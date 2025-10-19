@@ -46,5 +46,21 @@ namespace WebApplication2.repositories.repository
             _context.SaveChanges();
         }
 
+
+        public User? GetUserByUsername(string username)
+        {
+            return _context.Users.FirstOrDefault(u => u.username == username);
+        }
+
+        public void DeleteUser(User user)
+        {
+            if (user == null) return;
+            _context.Users.Remove(user);
+            _context.SaveChanges();
+        }
+
+
+
+
     }
 }

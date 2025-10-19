@@ -15,5 +15,11 @@ namespace WebApplication2.repositories;
     void UpdateUser(User user);
 
 
+
+    User? GetUserByUsername(string username);
+    void DeleteUser(User user); 
+
+
+
 }
 

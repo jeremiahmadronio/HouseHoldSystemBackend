@@ -54,26 +54,32 @@ namespace WebApplication2.service
 
             var displayList = display.Select(d => new DisplayGamesDTO {
 
+                gameId = d.id,
                 photo = d.photo != null ? Convert.ToBase64String(d.photo) : string.Empty,
                 product_name = d.product_name,
                 unit = d.unit,
-                mock_price = GenerateMockPrice(d.correct_price)          
+                mock_price = GenerateMockPrice(d.correct_price),
+                correct_price = d.correct_price,
             }).ToList();
 
             return displayList;
         
         }
 
-
         //generate mock price
         private int GenerateMockPrice(decimal realPrice)
         {
-          
-            int min = Math.Max(0, (int)realPrice - 50); 
+            if (_random.NextDouble() < 0.3)
+            {
+                return (int)realPrice;
+            }
+
+            int min = Math.Max(0, (int)realPrice - 50);
             int max = (int)realPrice + 100;
 
-            return _random.Next(min, max + 1); 
+            return _random.Next(min, max + 1);
         }
+
 
 
         //Cheking the answer if correct

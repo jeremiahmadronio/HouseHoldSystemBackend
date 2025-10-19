@@ -74,6 +74,19 @@ namespace WebApplication2.Controllers
         }
 
 
+        [HttpPost("create-users")]
+        public IActionResult CreateUser([FromBody] CreateUserAdminDTO request)
+        {
+            bool success = _userService.CreateUsers(request, out string message);
+
+            if (!success)
+                return BadRequest(new { message });
+
+            return Ok(new { message });
+        }
+
+
+
         //reset-password
         [HttpPost("reset-password")]
         public IActionResult updateUser([FromBody] ResetPasswordDTO request) { 
@@ -101,7 +114,32 @@ namespace WebApplication2.Controllers
                 
 
         }
-       
+
+        [HttpPost("update-user")]
+        public IActionResult UpdateUser([FromBody] EditUserDTO request)
+        {
+            bool success = _userService.UpdateUserInfo(request, out string message);
+
+            if (!success)
+                return BadRequest(new { message });
+
+            return Ok(new { message });
+        }
+
+        [HttpDelete("delete-user")]
+        public IActionResult DeleteUser([FromQuery] string username)
+        {
+            bool success = _userService.DeleteUserByUsername(username, out string message);
+
+            if (!success)
+                return NotFound(new { message });
+
+            return Ok(new { message });
+        }
+
+
+
+
 
     }
 }
