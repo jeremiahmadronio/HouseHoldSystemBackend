@@ -57,13 +57,21 @@ namespace WebApplication2.service
        string fileName,
        List<(string CommodityName, string Specification, decimal? Price, string Category)> parsedData)
         {
+            var today = DateTime.UtcNow;
+            int dayOfMonth = today.Day;
+            int weekOfMonth = (int)Math.Ceiling(dayOfMonth / 7.0);
+            string reportWeek = $"{today:MMMM} Week {weekOfMonth}";
+
+            // Step 2: Create new PriceReport entry
             var report = new PriceReport
             {
-                FileName = fileName,
-                ReportWeek = DateTime.Now.ToString("yyyy-MM-dd"),
+                FileName = string.IsNullOrEmpty(fileName) ? "ADDED BY ADMIN" : fileName,
+                ReportWeek = reportWeek,
+                UploadDate = today,
                 UploadedBy = "Admin"
             };
-            await _reportRepo.AddAsync(report);
+
+            await _reportRepo.AddAsync(report); 
 
             foreach (var item in parsedData.Distinct())
             {
@@ -241,7 +249,6 @@ namespace WebApplication2.service
 
 
 
-
         public async Task<List<DisplayProductPriceDTO>> GetAllProductPriceDisplayAsync()
         {
             var commodities = await _commodityRepo.GetAllCommoditiesAsync();
@@ -270,15 +277,141 @@ namespace WebApplication2.service
                     id = commodity.CommodityId,
                     ProductName = commodity.ProductName,
                     Category = string.IsNullOrEmpty(commodity.Category) ? "N/A" : commodity.Category,
+                    Unit = latestPriceEntry?.unit ?? "N/A", 
                     LatestPrice = latest,
                     PreviousPrice = previous,
                     Status = status,
-                    LatestPriceDate = latestPriceEntry?.Report?.UploadDate // galing sa PriceReport
+                    LatestPriceDate = latestPriceEntry?.DateReported 
                 });
             }
 
             return result;
         }
+
+
+
+
+
+
+
+
+        public async Task AddNewProductPriceAsync(CreateProductDTO dto)
+        {
+            var commodity = await _commodityRepo.GetByNameAsync(dto.ProductName);
+
+            if (commodity == null)
+            {
+                commodity = new Commodity
+                {
+                    ProductName = dto.ProductName,
+                    Category = dto.Category
+                };
+
+                await _commodityRepo.AddAsync(commodity);
+            }
+
+            var today = DateTime.UtcNow;
+            int dayOfMonth = today.Day;
+
+            int weekOfMonth = (int)Math.Ceiling(dayOfMonth / 7.0);
+            string reportWeek = $"{today:MMMM} Week {weekOfMonth}";
+
+            var newReport = new PriceReport
+            {
+                FileName = "ADDED BY ADMIN",
+                ReportWeek = reportWeek,
+                UploadDate = today,
+                UploadedBy = "Admin"
+            };
+
+            await _reportRepo.AddAsync(newReport);
+
+            var newPrice = new ProductPrice
+            {
+                CommodityId = commodity.CommodityId,
+                Price = dto.Price,
+                unit = dto.Unit,
+                DateReported = today,
+                ReportId = newReport.ReportId
+            };
+
+            await _priceRepo.AddAsync(newPrice);
+        }
+
+
+
+
+        public async Task<bool> EditProductPriceByIdAsync(int commodityId, EditProductDTO dto)
+        {
+            // 1️⃣ Check if commodity exists
+            var commodity = await _commodityRepo.GetByIdAsync(commodityId);
+            if (commodity == null)
+                throw new Exception("Product not found.");
+
+            // 2️⃣ Update product name or category if changed
+            bool isUpdated = false;
+            if (!string.Equals(commodity.ProductName, dto.ProductName, StringComparison.OrdinalIgnoreCase))
+            {
+                commodity.ProductName = dto.ProductName;
+                isUpdated = true;
+            }
+
+            if (!string.Equals(commodity.Category, dto.Category, StringComparison.OrdinalIgnoreCase))
+            {
+                commodity.Category = dto.Category;
+                isUpdated = true;
+            }
+
+            if (isUpdated)
+                await _commodityRepo.UpdateAsync(commodity);
+
+            var latestPrice = await _priceRepo.GetLatestByCommodityAsync(commodity.CommodityId);
+            if (latestPrice == null)
+                throw new Exception("No existing price record for this product.");
+
+            var today = DateTime.UtcNow;
+            int weekOfMonth = (int)Math.Ceiling(today.Day / 7.0);
+            string reportWeek = $"{today:MMMM} Week {weekOfMonth}";
+
+            var newReport = new PriceReport
+            {
+                FileName = "UPDATED BY ADMIN",
+                ReportWeek = reportWeek,
+                UploadDate = today,
+                UploadedBy = "Admin"
+            };
+            await _reportRepo.AddAsync(newReport);
+
+            var updatedPrice = new ProductPrice
+            {
+                CommodityId = commodity.CommodityId,
+                Price = dto.LatestPrice,
+                unit = dto.Unit ?? latestPrice.unit,
+                DateReported = today,
+                ReportId = newReport.ReportId
+            };
+
+            await _priceRepo.AddAsync(updatedPrice);
+
+            return true;
+        }
+
+
+
+
+        public async Task<bool> DeleteProductByIdAsync(int commodityId)
+        {
+            var commodity = await _commodityRepo.GetByIdAsync(commodityId);
+            if (commodity == null)
+                throw new Exception("Product not found.");
+
+            await _priceRepo.DeleteByCommodityIdAsync(commodityId);
+
+            await _commodityRepo.DeleteAsync(commodity);
+
+            return true;
+        }
+
 
     }
 }

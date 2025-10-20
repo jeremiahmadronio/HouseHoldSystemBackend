@@ -40,5 +40,20 @@ namespace WebApplication2.repositories.repository
                
                 .ToListAsync();
         }
+
+
+        public async Task<Commodity?> GetByIdAsync(int id)
+        {
+            return await _context.Commodities
+                .FirstOrDefaultAsync(c => c.CommodityId == id);
+        }
+
+
+        public async Task DeleteAsync(Commodity commodity)
+        {
+            _context.Commodities.Remove(commodity);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

@@ -12,5 +12,7 @@ public interface IProductPriceRepository
     Task<ProductPrice?> GetLatestByCommodityAsync(int commodityId);
     Task<List<ProductPrice>> GetLatestTwoByCommodityAsync(int commodityId);
 
+    Task DeleteByCommodityIdAsync(int commodityId);
+
 
 }

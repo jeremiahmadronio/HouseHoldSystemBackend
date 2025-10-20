@@ -57,6 +57,18 @@ namespace WebApplication2.repositories.repository
                 .ToListAsync();
         }
 
+        public async Task DeleteByCommodityIdAsync(int commodityId)
+        {
+            var prices = await _context.ProductPrices
+                .Where(p => p.CommodityId == commodityId)
+                .ToListAsync();
+
+            if (prices.Any())
+            {
+                _context.ProductPrices.RemoveRange(prices);
+                await _context.SaveChangesAsync();
+            }
+        }
 
 
 

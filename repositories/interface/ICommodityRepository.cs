@@ -8,5 +8,8 @@ public interface ICommodityRepository
     Task SaveChangesAsync();
     Task UpdateAsync(Commodity commodity);
     Task<List<Commodity>> GetAllCommoditiesAsync();
+    Task<Commodity?> GetByIdAsync(int id);
+
+    Task DeleteAsync(Commodity commodity);
 
 }
