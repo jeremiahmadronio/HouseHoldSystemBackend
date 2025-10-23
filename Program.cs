@@ -25,6 +25,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<ProductsService>();
 builder.Services.AddScoped<MarketService>();
+builder.Services.AddScoped<PriceReportService>();
 
 
 //repository here
@@ -32,16 +33,13 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<IGamesRepository, GamesRepository>();
 builder.Services.AddScoped<IMarketRepository, MarketRepository>();
-
-
-
 builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
 builder.Services.AddScoped<IProductPriceRepository, ProductPriceRepository>();
 builder.Services.AddScoped<IPriceReportRepository, PriceReportRepository>();
 
 
 
-
+    
 
 
 

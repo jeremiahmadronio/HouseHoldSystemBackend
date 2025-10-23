@@ -6,4 +6,7 @@ public interface IPriceReportRepository
 {
     Task<PriceReport> AddAsync(PriceReport report);
     Task SaveChangesAsync();
+
+    Task<IEnumerable<PriceReport>> getAllAsync();
+
 }

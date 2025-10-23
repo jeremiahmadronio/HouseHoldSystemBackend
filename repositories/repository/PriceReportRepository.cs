@@ -11,6 +11,8 @@ namespace WebApplication2.repositories.repository
         {
             _context = context;
         }
+
+        //ADD 
         public async Task<PriceReport> AddAsync(PriceReport report)
         {
             _context.PriceReports.Add(report);
@@ -18,10 +20,13 @@ namespace WebApplication2.repositories.repository
             return report;
         }
 
+        //SAVE
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<PriceReport>> getAllAsync() => await _context.PriceReports.ToListAsync();
     }
 
 }
