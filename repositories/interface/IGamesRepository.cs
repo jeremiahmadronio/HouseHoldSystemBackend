@@ -13,5 +13,8 @@ public interface IGamesRepository
     //get by id
     Games? getGamesById(Guid id);
 
-    
+    int? GetTotalGames();
+    void UpdateGame(Games game);
+    void DeleteGames(Guid id);
+
 }

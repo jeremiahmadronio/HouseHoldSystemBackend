@@ -12,4 +12,9 @@ public interface IGamesService
 
     bool checkAnswer(SubmitAnswerDTO answerDTO , out string message);
 
+    object getTotalUserAndGames();
+
+    bool updateGame(UpdateGameDTO dto, out string message);
+
+    bool DeleteGame(Guid id, out string message);
 }

@@ -19,7 +19,6 @@ namespace WebApplication2.Controllers {
                 }
 
 
-        //add games
         [HttpPost("AddGames")]
         public IActionResult Add([FromBody] AddGamesDTO dto)
         {
@@ -28,6 +27,7 @@ namespace WebApplication2.Controllers {
 
             return BadRequest(new { success = false, message });
         }
+
 
 
         //display game
@@ -50,7 +50,40 @@ namespace WebApplication2.Controllers {
 
 
 
+        [HttpGet("displayGamesAndUser")]
+        public IActionResult getTotalUserandGames() {
+
+            var stats = _gamesService.getTotalUserAndGames();
+              return Ok(stats);
+        }
+
+
+        [HttpPut("UpdateGame/{id}")]
+        public IActionResult UpdateGame(Guid id, [FromBody] UpdateGameDTO dto)
+        {
+            dto.id = id; // para siguradong magamit
+            if (_gamesService.updateGame(dto, out string message))
+                return Ok(new { success = true, message });
+
+            return BadRequest(new { success = false, message });
+        }
+
+
+
+
+        [HttpDelete("DeleteGame/{id}")]
+        public IActionResult DeleteGame(Guid id)
+        {
+            if (_gamesService.DeleteGame(id, out string message))
+                return Ok(new { success = true, message });
+
+            return BadRequest(new { success = false, message });
+        }
+
+
+
     }
+
 
 
 }

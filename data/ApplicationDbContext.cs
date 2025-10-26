@@ -18,6 +18,9 @@ namespace WebApplication2.data
         public DbSet<ProductPrice> ProductPrices { get; set; }
         public DbSet<PriceReport> PriceReports { get; set; }
 
+        public DbSet<DietaryTag> DietaryTags { get; set; }
+        public DbSet<ProductDietaryTag> ProductDietaryTags { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +28,26 @@ namespace WebApplication2.data
 
             modelBuilder.Entity<User>().ToTable("users")
                 .HasIndex(u => u.email)
+                .IsUnique();
+
+
+            modelBuilder.Entity<ProductDietaryTag>()
+         .HasKey(pd => pd.Id);
+
+            modelBuilder.Entity<ProductDietaryTag>()
+                .HasOne(pd => pd.ProductPrice)
+                .WithMany(p => p.ProductDietaryTags)
+                .HasForeignKey(pd => pd.ProductPriceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductDietaryTag>()
+                .HasOne(pd => pd.DietaryTag)
+                .WithMany(d => d.ProductDietaryTags)
+                .HasForeignKey(pd => pd.DietaryTagId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductDietaryTag>()
+                .HasIndex(pd => new { pd.ProductPriceId, pd.DietaryTagId })
                 .IsUnique();
         }
     }

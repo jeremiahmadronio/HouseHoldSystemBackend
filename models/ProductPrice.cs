@@ -21,6 +21,8 @@ namespace WebApplication2.models
         public PriceReport Report { get; set; }
 
         public DateTime DateReported { get; set; } = DateTime.UtcNow;
+
+        public ICollection<ProductDietaryTag> ProductDietaryTags { get; set; } = new List<ProductDietaryTag>();
     }
 
 }

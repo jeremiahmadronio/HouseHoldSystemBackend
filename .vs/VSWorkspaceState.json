@@ -1,9 +1,9 @@
 {
   "ExpandedNodes": [
     "",
+    "\\Controllers",
     "\\dto",
-    "\\dto\\GamesDTO",
-    "\\dto\\ProductPriceDTO",
+    "\\dto\\DietaryTagDTO",
     "\\models",
     "\\repositories",
     "\\repositories\\interface",
@@ -11,6 +11,6 @@
     "\\service",
     "\\service\\interface"
   ],
-  "SelectedNode": "\\service\\ProductsService.cs",
+  "SelectedNode": "\\service\\ProductDietaryTagService.cs",
   "PreviewInSolutionExplorer": false
 }

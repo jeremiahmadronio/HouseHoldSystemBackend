@@ -41,6 +41,26 @@ namespace WebApplication2.repositories.repository
         
         }
 
+        public int? GetTotalGames() {
+            return _context.Games.Count();
+                }
+
+        public void UpdateGame(Games game)
+        {
+            _context.Games.Update(game);
+            _context.SaveChanges();
+        }
+
+        public void DeleteGames(Guid id)
+        {
+            var game = _context.Games.FirstOrDefault(g => g.id == id);
+            if (game != null)
+            {
+                _context.Games.Remove(game);
+                _context.SaveChanges();
+            }
+        }
+
 
 
     }

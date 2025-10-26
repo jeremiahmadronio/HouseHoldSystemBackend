@@ -7,23 +7,35 @@ namespace WebApplication2.service
     public class GamesService : IGamesService
     {
         private readonly IGamesRepository _gameRepository;
+        private readonly IUserRepository _userRepository;
         private readonly Random _random = new Random();
 
 
-        public GamesService(IGamesRepository gameRepository)
+        public GamesService(IGamesRepository gameRepository, IUserRepository userRepository )
         {
             _gameRepository = gameRepository;
+            _userRepository = userRepository;
         }
         //create games
         public bool createGames(AddGamesDTO dto, out string message)
         {
             try
             {
+                byte[]? imageBytes = null;
+
+                if (!string.IsNullOrEmpty(dto.photo))
+                {
+                    // If may "data:image/png;base64," part, remove it
+                    var base64Data = dto.photo.Contains(",")
+                        ? dto.photo.Split(',')[1]
+                        : dto.photo;
+
+                    imageBytes = Convert.FromBase64String(base64Data);
+                }
+
                 var game = new Games
                 {
-                    photo = !string.IsNullOrEmpty(dto.photo)
-                                ? Convert.FromBase64String(dto.photo)
-                                : null,
+                    photo = imageBytes,
                     product_name = dto.product_name,
                     correct_price = dto.correct_price,
                     unit = dto.unit
@@ -45,6 +57,7 @@ namespace WebApplication2.service
                 return false;
             }
         }
+
 
 
         //display games
@@ -102,6 +115,62 @@ namespace WebApplication2.service
             return userCorrect;
 
         
+        }
+
+        public object getTotalUserAndGames() { 
+            var totalUser =  _userRepository.GetTotalUser();
+            var totalGames = _gameRepository.GetTotalGames();
+
+            return new
+            {
+
+                totalGames,
+                totalUser,
+            };
+        
+        }
+
+
+        public bool updateGame(UpdateGameDTO dto, out string message)
+        {
+            var existing = _gameRepository.getGamesById(dto.id);
+            if (existing == null)
+            {
+                message = "Game not found.";
+                return false;
+            }
+
+            existing.product_name = dto.product_name;
+            existing.correct_price = dto.correct_price;
+            existing.unit = dto.unit;
+
+            if (!string.IsNullOrEmpty(dto.photo))
+            {
+                existing.photo = Convert.FromBase64String(
+                    dto.photo.Replace("data:image/jpeg;base64,", "")
+                             .Replace("data:image/png;base64,", "")
+                             .Replace("data:image/webp;base64,", "")
+                );
+            }
+
+            _gameRepository.UpdateGame(existing);
+            message = "Game updated successfully.";
+            return true;
+        }
+
+
+        public bool DeleteGame(Guid id, out string message)
+        {
+            var existing = _gameRepository.getGamesById(id);
+            if (existing == null)
+            {
+                message = "Game not found.";
+                return false;
+            }
+
+            _gameRepository.DeleteGames(id);
+            message = "Game deleted successfully.";
+            return true;
         }
 
     }

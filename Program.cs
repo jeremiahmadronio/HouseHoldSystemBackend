@@ -26,6 +26,8 @@ builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddScoped<ProductsService>();
 builder.Services.AddScoped<MarketService>();
 builder.Services.AddScoped<PriceReportService>();
+builder.Services.AddScoped<DietaryTagService>();
+builder.Services.AddScoped<ProductDietaryTagService>();
 
 
 //repository here
@@ -36,10 +38,13 @@ builder.Services.AddScoped<IMarketRepository, MarketRepository>();
 builder.Services.AddScoped<ICommodityRepository, CommodityRepository>();
 builder.Services.AddScoped<IProductPriceRepository, ProductPriceRepository>();
 builder.Services.AddScoped<IPriceReportRepository, PriceReportRepository>();
+builder.Services.AddScoped<IDietaryTagRepository, DietaryTagRepository>();
+builder.Services.AddScoped<IProductDietaryTagRepository, ProductDietaryTagRepository>();
 
 
 
-    
+
+
 
 
 

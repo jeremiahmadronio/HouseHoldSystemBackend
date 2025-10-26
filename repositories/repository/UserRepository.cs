@@ -60,6 +60,10 @@ namespace WebApplication2.repositories.repository
         }
 
 
+        public int? GetTotalUser() { 
+        
+            return _context.Users.Count();
+        }
 
 
     }

@@ -17,8 +17,9 @@ namespace WebApplication2.repositories;
 
 
     User? GetUserByUsername(string username);
-    void DeleteUser(User user); 
+    void DeleteUser(User user);
 
+    int? GetTotalUser();
 
 
 }
