@@ -234,7 +234,7 @@ namespace WebApplication2.service
 
 
 
-        // Helper classes
+       
         public class TabulaTable
         {
             public List<List<TabulaCell>> data { get; set; }

@@ -12,4 +12,6 @@ public interface ICommodityRepository
 
     Task DeleteAsync(Commodity commodity);
 
+    Task<List<string>> GetAllCategoriesAsync();
+
 }

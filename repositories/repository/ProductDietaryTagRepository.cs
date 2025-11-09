@@ -16,17 +16,13 @@ namespace WebApplication2.repositories.repository
 
         public async Task<IEnumerable<ProductPrice>> GetAllProductsWithOptionalTagsAsync()
         {
-            // Kunin yung latest ReportId (pinaka-latest na batch)
-            var latestReportId = await _context.ProductPrices
-                .MaxAsync(pp => pp.ReportId);
-
             return await _context.ProductPrices
-                .Where(pp => pp.ReportId == latestReportId) // filter sa latest batch
                 .Include(pp => pp.Commodity)
                 .Include(pp => pp.ProductDietaryTags)
                     .ThenInclude(pdt => pdt.DietaryTag)
                 .ToListAsync();
         }
+
 
         public async Task<IEnumerable<ProductPrice>> GetAllProductPricesByCommodityAsync(int commodityId)
         {

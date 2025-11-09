@@ -25,7 +25,15 @@ namespace WebApplication2.service
         {
             var data = await _productDietaryTagRepository.GetAllProductsWithOptionalTagsAsync();
 
-            var result = data.Select(pp => new DisplayProductDietaryTagDTO
+            
+            var latestProducts = data
+                .GroupBy(pp => pp.CommodityId)
+                .Select(g => g
+                    .OrderByDescending(pp => pp.DateReported)
+                    .First()) 
+                .ToList();
+
+            var result = latestProducts.Select(pp => new DisplayProductDietaryTagDTO
             {
                 Id = pp.ProductPriceId,
                 ProductName = pp.Commodity.ProductName,
@@ -33,11 +41,12 @@ namespace WebApplication2.service
                 LatestPrice = pp.Price,
                 DietaryTags = pp.ProductDietaryTags
                                 .Select(pdt => pdt.DietaryTag.Name)
-                                .ToList() 
+                                .ToList()
             });
 
             return result;
         }
+
 
 
 
@@ -49,7 +58,6 @@ namespace WebApplication2.service
 
             var commodityId = productPrice.CommodityId;
 
-            // Kunin lahat ng ProductPrice para sa commodity na iyon
             var allPricesForCommodity = await _productDietaryTagRepository.GetAllProductPricesByCommodityAsync(commodityId);
 
             foreach (var pp in allPricesForCommodity)

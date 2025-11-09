@@ -7,6 +7,8 @@ using WebApplication2.repositories;
 using WebApplication2.repositories.repository;
 using WebApplication2.service;
 using WebApplication2.settings;
+using WebApplication2.AI_API_INTEGRATION;
+using WebApplication2.WebScrapping;
 
 
 
@@ -28,6 +30,18 @@ builder.Services.AddScoped<MarketService>();
 builder.Services.AddScoped<PriceReportService>();
 builder.Services.AddScoped<DietaryTagService>();
 builder.Services.AddScoped<ProductDietaryTagService>();
+builder.Services.AddScoped<PriceAnalyticsService>();
+builder.Services.AddScoped<CommoditiyService>();
+
+//AI Service
+builder.Services.AddSingleton<GeminiService>();
+
+
+//WebScraper Service
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IWebScraperService, WebScraperService>();
+builder.Services.AddHostedService<DailyScraperService>();
+
 
 
 //repository here
@@ -40,6 +54,7 @@ builder.Services.AddScoped<IProductPriceRepository, ProductPriceRepository>();
 builder.Services.AddScoped<IPriceReportRepository, PriceReportRepository>();
 builder.Services.AddScoped<IDietaryTagRepository, DietaryTagRepository>();
 builder.Services.AddScoped<IProductDietaryTagRepository, ProductDietaryTagRepository>();
+builder.Services.AddScoped<IPriceAnalyticsRepository, PriceAnalyticsRepository>();
 
 
 

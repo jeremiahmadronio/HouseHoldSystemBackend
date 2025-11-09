@@ -1,0 +1,23 @@
+# Build Folders
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider files
+.idea/
+
+# Resharper files
+*.DotSettings.user
+
+# Npm / Node
+node_modules/
+
+# OS generated files
+.DS_Store
+Thumbs.db

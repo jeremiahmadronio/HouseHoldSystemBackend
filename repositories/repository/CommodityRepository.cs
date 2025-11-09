@@ -55,5 +55,14 @@ namespace WebApplication2.repositories.repository
             await _context.SaveChangesAsync();
         }
 
+
+        public async Task<List<string>> GetAllCategoriesAsync()
+        {
+            return await _context.Commodities
+                .Select(c => c.Category)
+                .Distinct()
+                .ToListAsync();
+        }
+
     }
 }
