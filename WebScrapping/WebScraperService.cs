@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Globalization;
+using Microsoft.AspNetCore.Http;
+using WebApplication2.service;
+using HtmlAgilityPack;
+using System.Text.RegularExpressions;
 
 namespace WebApplication2.WebScrapping
 {
@@ -13,30 +17,36 @@ namespace WebApplication2.WebScrapping
         private readonly ILogger<WebScraperService> _logger;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _config;
+        private readonly ProductsService _productsService;
 
         private readonly string _baseUrl;
         private readonly string _targetUrl;
         private readonly string _saveDir;
         private readonly int _monthsLimit;
 
-        public WebScraperService(ILogger<WebScraperService> logger, HttpClient httpClient, IConfiguration config)
+        public WebScraperService(
+            ILogger<WebScraperService> logger,
+            HttpClient httpClient,
+            IConfiguration config,
+            ProductsService productsService)
         {
             _logger = logger;
             _httpClient = httpClient;
             _config = config;
+            _productsService = productsService;
 
             _baseUrl = _config["WebScraper:BaseUrl"] ?? "https://www.da.gov.ph";
             _targetUrl = _config["WebScraper:TargetUrl"] ?? "https://www.da.gov.ph/price-monitoring/";
 
-            // If relative path lang sa config, convert to full path
-            var folderPath = _config["WebScraper:DownloadFolder"] ?? "DownloadedPDFs";
-            _saveDir = Path.IsPathRooted(folderPath)
-                ? folderPath
-                : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folderPath);
+            var folderPath = _config["WebScraper:DownloadFolder"] ??
+                             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "DA_PDFs");
+
+            _saveDir = Path.IsPathRooted(folderPath) ? folderPath : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folderPath);
 
             _monthsLimit = int.TryParse(_config["WebScraper:MonthsLimit"], out var limit) ? limit : 3;
 
-            Directory.CreateDirectory(_saveDir); // auto-create folder if not exists
+            Directory.CreateDirectory(_saveDir);
+            _logger.LogInformation($"📂 PDF save directory: {_saveDir}");
         }
 
         public async Task CheckAndDownloadNewPDFsAsync()
@@ -54,13 +64,14 @@ namespace WebApplication2.WebScrapping
                 return;
             }
 
-            var doc = new HtmlAgilityPack.HtmlDocument(); // ✅ avoid ambiguity
+            var doc = new HtmlAgilityPack.HtmlDocument();
             doc.LoadHtml(html);
 
-            var pdfLinks = doc.DocumentNode.SelectNodes("//a[contains(@href, '.pdf')]");
+            // Kunin lang ang <a> sa loob ng table id="tablepress-112"
+            var pdfLinks = doc.DocumentNode.SelectNodes("//table[@id='tablepress-112']//a[contains(@href, '.pdf')]");
             if (pdfLinks == null || pdfLinks.Count == 0)
             {
-                _logger.LogWarning("⚠️ No PDF links found.");
+                _logger.LogWarning("⚠️ No PDF links found in the table.");
                 return;
             }
 
@@ -69,14 +80,29 @@ namespace WebApplication2.WebScrapping
                 var href = link.GetAttributeValue("href", "").Trim();
                 if (string.IsNullOrEmpty(href)) continue;
 
-                if (!href.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                    href = _baseUrl + href;
-
                 var fileName = Path.GetFileName(href);
                 if (string.IsNullOrEmpty(fileName)) continue;
 
-                // 🗓 Filter: only last N months
-                if (!IsWithinLastMonths(fileName, _monthsLimit))
+                // Extract the date part using regex (example: March-25-2025)
+                string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                var match = Regex.Match(nameWithoutExt, @"([A-Za-z]+-\d{1,2}-\d{4})");
+                if (!match.Success)
+                {
+                    _logger.LogWarning($"⚠️ Cannot extract date from filename: {fileName}");
+                    continue; // skip if cannot extract date
+                }
+
+                string datePart = match.Groups[1].Value;
+                if (!DateTime.TryParseExact(datePart,
+                    new[] { "MMMM-d-yyyy", "MMMM-dd-yyyy", "MMM-d-yyyy", "MMM-dd-yyyy" },
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fileDate))
+                {
+                    _logger.LogWarning($"⚠️ Cannot parse date from extracted part: {datePart}");
+                    continue; // skip if cannot parse date
+                }
+
+                // Check last 3 months
+                if (fileDate < DateTime.Now.AddMonths(-_monthsLimit))
                 {
                     _logger.LogInformation($"⏩ Skipped (older than {_monthsLimit} months): {fileName}");
                     continue;
@@ -84,15 +110,25 @@ namespace WebApplication2.WebScrapping
 
                 var filePath = Path.Combine(_saveDir, fileName);
 
-                if (!File.Exists(filePath))
-                {
-                    await DownloadPDFAsync(href, filePath);
-                }
-                else
+                // Skip if already downloaded
+                if (File.Exists(filePath))
                 {
                     _logger.LogInformation($"📂 Skipped existing file: {fileName}");
+                    continue;
                 }
+
+                // Ensure full URL
+                if (!href.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    href = _baseUrl + href;
+
+                // Download PDF
+                await DownloadPDFAsync(href, filePath);
+
+                // Optional: process PDF automatically
+                await ProcessPDFAutomatically(filePath, fileName);
             }
+
+            _logger.LogInformation("✅ Task completed.");
         }
 
         private async Task DownloadPDFAsync(string url, string filePath)
@@ -101,7 +137,7 @@ namespace WebApplication2.WebScrapping
             {
                 var bytes = await _httpClient.GetByteArrayAsync(url);
                 await File.WriteAllBytesAsync(filePath, bytes);
-                _logger.LogInformation($"✅ Downloaded: {Path.GetFileName(filePath)}");
+                _logger.LogInformation($"✅ Downloaded: {Path.GetFileName(filePath)} to {filePath}");
             }
             catch (Exception ex)
             {
@@ -109,31 +145,23 @@ namespace WebApplication2.WebScrapping
             }
         }
 
-        // 🔍 Helper method: check kung nasa last N months base sa filename
-        private bool IsWithinLastMonths(string fileName, int months)
+        private async Task ProcessPDFAutomatically(string filePath, string fileName)
         {
-            var now = DateTime.Now;
-            var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
-            DateTime fileDate;
-
-            string[] formats = { "MMMM-yyyy", "MMM-yyyy", "MM-dd-yyyy", "MM-yyyy", "yyyy-MM-dd" };
-
-            if (DateTime.TryParseExact(nameWithoutExt, formats, CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out fileDate))
+            try
             {
-                return fileDate >= now.AddMonths(-months);
-            }
+                var memoryStream = new MemoryStream(await File.ReadAllBytesAsync(filePath));
+                var formFile = new FormFile(memoryStream, 0, memoryStream.Length, "file", fileName);
 
-            // try parse kung may month name lang (e.g., "October" or "Oct")
-            if (DateTime.TryParseExact(nameWithoutExt, new[] { "MMMM", "MMM" },
-                CultureInfo.InvariantCulture, DateTimeStyles.None, out fileDate))
+                var parsedData = await _productsService.ProcessPdfWithTabula(formFile);
+
+                await _productsService.ProcessReportAsync(fileName, parsedData);
+
+                _logger.LogInformation($"📤 Processed and saved to DB: {fileName}");
+            }
+            catch (Exception ex)
             {
-                fileDate = new DateTime(now.Year, fileDate.Month, 1);
-                return fileDate >= now.AddMonths(-months);
+                _logger.LogError(ex, $"❌ Failed to process PDF automatically: {fileName}");
             }
-
-            _logger.LogDebug($"⚠️ Cannot parse date from filename: {fileName}");
-            return false; // if no recognizable date, skip for safety
         }
     }
 }
