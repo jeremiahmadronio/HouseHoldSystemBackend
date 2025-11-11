@@ -32,6 +32,7 @@ builder.Services.AddScoped<DietaryTagService>();
 builder.Services.AddScoped<ProductDietaryTagService>();
 builder.Services.AddScoped<PriceAnalyticsService>();
 builder.Services.AddScoped<CommoditiyService>();
+builder.Services.AddScoped<DashboardService>();
 
 //AI Service
 builder.Services.AddSingleton<GeminiService>();

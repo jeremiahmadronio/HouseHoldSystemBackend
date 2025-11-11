@@ -9,6 +9,7 @@ namespace WebApplication2.repositories
 
         IQueryable<ProductPrice> GetFilteredQuery(PriceFilterRequest filter);
         Task<List<dynamic>> GetGroupedDataAsync(IQueryable<ProductPrice> query, string timeRange);
+        Task<List<dynamic>> GetWeeklyChartDataAsync(IQueryable<ProductPrice> query, int lastWeeks = 4);
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using WebApplication2.models;
+using WebApplication2.dto.ProductPriceDTO;
 
 namespace WebApplication2.repositories;
 
@@ -15,4 +16,7 @@ public interface IProductPriceRepository
     Task DeleteByCommodityIdAsync(int commodityId);
 
 
+
+    Task<List<PriceChangeDTO>> GetPriceIncreasesAsync();
+    Task<List<PriceChangeDTO>> GetPriceDecreasesAsync();
 }

@@ -11,7 +11,10 @@ using UglyToad.PdfPig.Content;
 using System.Globalization;
 using System.Linq;
 using FuzzySharp;
+using System.Text.Json;
 using WebApplication2.dto.ProductPriceDTO;
+
+
 
 namespace WebApplication2.service
 {
@@ -34,7 +37,7 @@ namespace WebApplication2.service
             _marketRepo = marketRepo;
         }
 
-    
+        // ✅ Detects measurement unit
         private string DetectUnit(string specification)
         {
             if (string.IsNullOrWhiteSpace(specification)) return "kg";
@@ -52,90 +55,45 @@ namespace WebApplication2.service
             return "kg";
         }
 
-      
-        public async Task<PriceReport> ProcessReportAsync(
-       string fileName,
-       List<(string CommodityName, string Specification, decimal? Price, string Category)> parsedData)
+        // 🟢 Extract date from filename only
+        private DateTime ExtractReportDateFromFileName(string fileName)
         {
-            var today = DateTime.UtcNow;
-            int dayOfMonth = today.Day;
-            int weekOfMonth = (int)Math.Ceiling(dayOfMonth / 7.0);
-            string reportWeek = $"{today:MMMM} Week {weekOfMonth}";
+            // Match Month-Day-Year (hyphen or underscore)
+            var fileDateMatch = Regex.Match(fileName,
+                @"(January|February|March|April|May|June|July|August|September|October|November|December)[\-_](\d{1,2})[\-_](\d{4})",
+                RegexOptions.IgnoreCase);
 
-            // Step 2: Create new PriceReport entry
-            var report = new PriceReport
+            if (fileDateMatch.Success)
             {
-                FileName = string.IsNullOrEmpty(fileName) ? "ADDED BY ADMIN" : fileName,
-                ReportWeek = reportWeek,
-                UploadDate = today,
-                UploadedBy = "Admin"
-            };
+                string month = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(fileDateMatch.Groups[1].Value.ToLower());
+                string day = fileDateMatch.Groups[2].Value;
+                string year = fileDateMatch.Groups[3].Value;
 
-            await _reportRepo.AddAsync(report); 
+                string combined = $"{month} {day}, {year}";
 
-            foreach (var item in parsedData.Distinct())
-            {
-                if (item.Price == null) continue;
-
-                // Try get existing commodity
-                var commodity = await _commodityRepo.GetByNameAsync(item.CommodityName);
-
-                if (commodity == null)
+                if (DateTime.TryParseExact(combined, "MMMM d, yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fileDate))
                 {
-                    // If not exists, create new with category from parsed PDF
-                    commodity = new Commodity
-                    {
-                        ProductName = item.CommodityName,
-                        Category = string.IsNullOrEmpty(item.Category) ? "Uncategorized" : item.Category,
-                        IsActive = true
-                    };
-                    await _commodityRepo.AddAsync(commodity);
-                }
-                else
-                {
-                    // Update category if null or empty
-                    if (string.IsNullOrEmpty(commodity.Category) && !string.IsNullOrEmpty(item.Category))
-                    {
-                        commodity.Category = item.Category;
-                        await _commodityRepo.UpdateAsync(commodity);
-                    }
-                }
-
-                string detectedUnit = DetectUnit(item.Specification);
-
-                var existingPrice = await _priceRepo.GetByCommodityAndReportAsync(commodity.CommodityId, report.ReportId);
-                if (existingPrice != null)
-                {
-                    existingPrice.Price = item.Price.Value;
-                    existingPrice.unit = detectedUnit;
-                    existingPrice.DateReported = DateTime.UtcNow;
-                    await _priceRepo.UpdateAsync(existingPrice);
-                }
-                else
-                {
-                    var newPrice = new ProductPrice
-                    {
-                        CommodityId = commodity.CommodityId,
-                        ReportId = report.ReportId,
-                        Price = item.Price.Value,
-                        unit = detectedUnit,
-                        DateReported = DateTime.UtcNow
-                    };
-                    await _priceRepo.AddAsync(newPrice);
+                    Console.WriteLine($"📅 Found date in filename: {fileDate:MMMM dd, yyyy}");
+                    return fileDate.ToUniversalTime();
                 }
             }
 
-            return report;
+            Console.WriteLine("⚠ No date found in filename. Using UTC Now.");
+            return DateTime.UtcNow;
         }
 
-        public async Task<List<(string CommodityName, string Specification, decimal? Price, string Category)>> ProcessPdfWithTabula(IFormFile file)
+        // 🟢 PDF parsing with Tabula
+        public async Task<List<(string CommodityName, string Specification, decimal? Price, string Category, DateTime ReportDate)>> ProcessPdfWithTabula(IFormFile file)
         {
-            var parsedData = new List<(string CommodityName, string Specification, decimal? Price, string Category)>();
+            var parsedData = new List<(string, string, decimal?, string, DateTime)>();
             var tempPdfPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".pdf");
             var outputJsonPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
 
             using (var stream = File.Create(tempPdfPath))
                 await file.CopyToAsync(stream);
+
+            // ✅ Extract date from filename
+            DateTime reportDate = ExtractReportDateFromFileName(file.FileName);
 
             string tabulaJarPath = @"C:\Users\Home\Downloads\tabula-1.0.5-jar-with-dependencies.jar";
 
@@ -158,27 +116,26 @@ namespace WebApplication2.service
             }
 
             string jsonContent = await File.ReadAllTextAsync(outputJsonPath);
-            var tables = System.Text.Json.JsonSerializer.Deserialize<List<TabulaTable>>(jsonContent);
+            var tables = JsonSerializer.Deserialize<List<TabulaTable>>(jsonContent);
 
             string currentCategory = "Uncategorized";
 
-            // Mapping table for headers
             var categoryMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-    {
-        { "OTHER BASIC COMMODITIES", "Other Basic Commodities" },
-        { "FRUITS", "Fruits" },
-        { "SPICES", "Spices" },
-        { "HIGHLAND VEGETABLES", "Highland Vegetables" },
-        { "LOWLAND VEGETABLES", "Lowland Vegetables" },
-        { "POULTRY PRODUCTS", "Poultry Products" },
-        { "OTHER LIVESTOCK MEAT PRODUCTS", "Other Livestock Meat Products" },
-        { "PORK MEAT PRODUCTS", "Pork Meat Products" },
-        { "FISH PRODUCTS", "Fish Products" },
-        { "CORN PRODUCTS", "Corn Products" },
-        { "LOCAL COMMERCIAL RICE", "Local Commercial Rice" },
-        { "IMPORTED COMMERCIAL RICE", "Imported Commercial Rice" },
-        { "BEEF MEAT PRODUCTS", "Beef Meat Products" }
-    };
+            {
+                { "OTHER BASIC COMMODITIES", "Other Basic Commodities" },
+                { "FRUITS", "Fruits" },
+                { "SPICES", "Spices" },
+                { "HIGHLAND VEGETABLES", "Highland Vegetables" },
+                { "LOWLAND VEGETABLES", "Lowland Vegetables" },
+                { "POULTRY PRODUCTS", "Poultry Products" },
+                { "OTHER LIVESTOCK MEAT PRODUCTS", "Other Livestock Meat Products" },
+                { "PORK MEAT PRODUCTS", "Pork Meat Products" },
+                { "FISH PRODUCTS", "Fish Products" },
+                { "CORN PRODUCTS", "Corn Products" },
+                { "LOCAL COMMERCIAL RICE", "Local Commercial Rice" },
+                { "IMPORTED COMMERCIAL RICE", "Imported Commercial Rice" },
+                { "BEEF MEAT PRODUCTS", "Beef Meat Products" }
+            };
 
             foreach (var table in tables)
             {
@@ -190,25 +147,20 @@ namespace WebApplication2.service
                     string spec = row.ElementAtOrDefault(1)?.text?.Trim() ?? "";
                     string priceStr = row.ElementAtOrDefault(2)?.text?.Trim() ?? "";
 
-                    // Normalize: trim + collapse multiple spaces
                     string commodity = Regex.Replace(commodityRaw, @"\s+", " ").Trim();
-
-                    // Remove non-digit characters for price
                     priceStr = Regex.Replace(priceStr, @"[^\d\.]", "");
 
                     if (string.IsNullOrWhiteSpace(commodity) || commodity.Length < 2)
                         continue;
 
-                    // Check if this is a header using mapping table
                     string key = commodity.ToUpper();
                     if (categoryMap.TryGetValue(key, out string mappedCategory))
                     {
                         currentCategory = mappedCategory;
                         Console.WriteLine($"📌 Detected new category: {currentCategory}");
-                        continue; // skip header row
+                        continue;
                     }
 
-                    // Optional: normalize rice products
                     string normalizedCommodity = commodity;
                     if (Regex.IsMatch(commodity, @"(special\s*rice|premium|well\s*milled|regular\s*milled)", RegexOptions.IgnoreCase))
                     {
@@ -219,8 +171,8 @@ namespace WebApplication2.service
 
                     if (decimal.TryParse(priceStr, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal price))
                     {
-                        parsedData.Add((normalizedCommodity, spec, price, currentCategory));
-                        Console.WriteLine($"✔ Parsed: {normalizedCommodity} | {spec} | {price} | Category: {currentCategory}");
+                        parsedData.Add((normalizedCommodity, spec, price, currentCategory, reportDate));
+                        Console.WriteLine($"✔ Parsed: {normalizedCommodity} | {spec} | {price} | {currentCategory} | Date: {reportDate:MMMM dd, yyyy}");
                     }
                 }
             }
@@ -232,9 +184,61 @@ namespace WebApplication2.service
             return parsedData;
         }
 
+        // 🟢 Save to DB
+        public async Task<PriceReport> ProcessReportAsync(string fileName,
+            List<(string CommodityName, string Specification, decimal? Price, string Category, DateTime ReportDate)> parsedData)
+        {
+            if (parsedData.Count == 0)
+                throw new Exception("No data to process.");
 
+            DateTime reportDate = parsedData.First().ReportDate;
+            int weekOfMonth = (int)Math.Ceiling(reportDate.Day / 7.0);
+            string reportWeek = $"{reportDate:MMMM} Week {weekOfMonth}";
 
-       
+            var report = new PriceReport
+            {
+                FileName = string.IsNullOrEmpty(fileName) ? "ADDED BY ADMIN" : fileName,
+                ReportWeek = reportWeek,
+                UploadDate = reportDate,
+                UploadedBy = "Admin"
+            };
+
+            await _reportRepo.AddAsync(report);
+
+            foreach (var item in parsedData)
+            {
+                if (item.Price == null) continue;
+
+                var commodity = await _commodityRepo.GetByNameAsync(item.CommodityName);
+                if (commodity == null)
+                {
+                    commodity = new Commodity
+                    {
+                        ProductName = item.CommodityName,
+                        Category = string.IsNullOrEmpty(item.Category) ? "Uncategorized" : item.Category,
+                        IsActive = true
+                    };
+                    await _commodityRepo.AddAsync(commodity);
+                }
+
+                string detectedUnit = DetectUnit(item.Specification);
+
+                var newPrice = new ProductPrice
+                {
+                    CommodityId = commodity.CommodityId,
+                    ReportId = report.ReportId,
+                    Price = item.Price.Value,
+                    unit = detectedUnit,
+                    DateReported = item.ReportDate
+                };
+
+                await _priceRepo.AddAsync(newPrice);
+            }
+
+            return report;
+        }
+
+        // Helper classes
         public class TabulaTable
         {
             public List<List<TabulaCell>> data { get; set; }
@@ -246,9 +250,6 @@ namespace WebApplication2.service
         }
 
 
-
-
-
         public async Task<List<DisplayProductPriceDTO>> GetAllProductPriceDisplayAsync()
         {
             var commodities = await _commodityRepo.GetAllCommoditiesAsync();
@@ -258,8 +259,49 @@ namespace WebApplication2.service
             {
                 var prices = await _priceRepo.GetLatestTwoByCommodityAsync(commodity.CommodityId);
 
-                var latestPriceEntry = prices.FirstOrDefault();
-                var previousPriceEntry = prices.Count > 1 ? prices[1] : null;
+                // Filter out invalid data and sort DESC by date
+                prices = prices
+                    .Where(p => p.DateReported != null)
+                    .OrderByDescending(p => p.DateReported)
+                    .ToList();
+
+                if (prices.Count == 0)
+                {
+                    result.Add(new DisplayProductPriceDTO
+                    {
+                        id = commodity.CommodityId,
+                        ProductName = commodity.ProductName,
+                        Category = string.IsNullOrEmpty(commodity.Category) ? "N/A" : commodity.Category,
+                        Unit = "N/A",
+                        LatestPrice = 0,
+                        PreviousPrice = null,
+                        Status = "N/A",
+                        LatestPriceDate = null
+                    });
+                    continue;
+                }
+
+                // ✅ Latest price = pinaka bagong may laman
+                var latestPriceEntry = prices.First();
+
+                // ✅ Hanapin ang "previous" base sa kasunod na date (kahit ilang araw pagitan)
+                ProductPrice? previousPriceEntry = null;
+                var latestDate = latestPriceEntry.DateReported.Date;
+
+                // Kumuha ng mga mas luma kaysa sa latest date, sorted descending (so newest older first)
+                var olderPrices = prices
+                    .Where(p => p.DateReported < latestDate)
+                    .OrderByDescending(p => p.DateReported)
+                    .ToList();
+
+                // Kung may mga mas luma, hanapin yung pinakamalapit na date (next earlier date na may laman)
+                if (olderPrices.Any())
+                {
+                    var nextEarlierDate = olderPrices.Max(p => p.DateReported);
+                    previousPriceEntry = olderPrices
+                        .Where(p => p.DateReported == nextEarlierDate)
+                        .FirstOrDefault();
+                }
 
                 decimal latest = latestPriceEntry?.Price ?? 0;
                 decimal? previous = previousPriceEntry?.Price;
@@ -277,17 +319,16 @@ namespace WebApplication2.service
                     id = commodity.CommodityId,
                     ProductName = commodity.ProductName,
                     Category = string.IsNullOrEmpty(commodity.Category) ? "N/A" : commodity.Category,
-                    Unit = latestPriceEntry?.unit ?? "N/A", 
+                    Unit = latestPriceEntry?.unit ?? "N/A",
                     LatestPrice = latest,
                     PreviousPrice = previous,
                     Status = status,
-                    LatestPriceDate = latestPriceEntry?.DateReported 
+                    LatestPriceDate = latestPriceEntry?.DateReported
                 });
             }
 
             return result;
         }
-
 
 
 
@@ -411,6 +452,13 @@ namespace WebApplication2.service
 
             return true;
         }
+
+
+
+
+
+
+
 
 
     }

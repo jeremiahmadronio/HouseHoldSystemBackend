@@ -12,9 +12,10 @@ namespace WebApplication2.models {
         public string? Specification { get; set; }
 
         public bool IsActive { get; set; } = true;
-		public ICollection<ProductPrice> Prices { get; set; }
+        public ICollection<ProductPrice> Prices { get; set; } = new List<ProductPrice>();
 
 
-	}
+
+    }
 
 }

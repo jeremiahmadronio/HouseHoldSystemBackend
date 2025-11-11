@@ -37,6 +37,24 @@ namespace WebApplication2.Controllers
         }
 
 
+        [HttpPost("weekly-chart")]
+        public async Task<IActionResult> GetWeeklyChart([FromBody] PriceFilterRequest filter)
+        {
+            try
+            {
+                if (filter == null)
+                    return BadRequest("Filter data is required.");
+
+                var result = await _priceAnalyticsService.GetWeeklyChartDataAsync(filter);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while generating weekly chart data.", error = ex.Message });
+            }
+        }
+
 
 
     }

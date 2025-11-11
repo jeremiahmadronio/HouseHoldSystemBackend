@@ -37,8 +37,8 @@ namespace WebApplication2.repositories.repository
         public async Task<List<Commodity>> GetAllCommoditiesAsync()
         {
             return await _context.Commodities
-               
-                .ToListAsync();
+                                 .Include(c => c.Prices)
+                                 .ToListAsync();
         }
 
 

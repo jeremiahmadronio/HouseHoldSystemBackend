@@ -19,38 +19,55 @@ namespace WebApplication2.service
         public async Task<object> GetAnalyticsAsync(PriceFilterRequest filter)
         {
             var query = _repository.GetFilteredQuery(filter);
+
+            // Kunin ang chart data
             var groupedData = await _repository.GetGroupedDataAsync(query, filter.TimeRange);
 
-            var currentAvg = groupedData.Any() ? groupedData.Average(x => (double)x.AvgPrice) : 0;
+            // Current average (latest month / latest period)
+            double currentAvg = 0;
+            if (groupedData.Any())
+            {
+                var latestPeriod = groupedData.Max(g => g.Period);
+                currentAvg = groupedData
+                    .Where(g => g.Period == latestPeriod)
+                    .Average(g => (double)g.AvgPrice);
+            }
 
             IQueryable<ProductPrice> prevQuery;
             var today = DateTime.UtcNow.Date;
 
             switch (filter.TimeRange.ToLower())
             {
+                case "monthly":
+                    // Previous month
+                    var firstDayThisMonth = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                    var firstDayPrevMonth = firstDayThisMonth.AddMonths(-1);
+                    var lastDayPrevMonth = firstDayThisMonth.AddDays(-1);
+
+                    prevQuery = query.Where(p => p.DateReported >= firstDayPrevMonth && p.DateReported <= lastDayPrevMonth);
+                    break;
+
                 case "weekly":
                     var startPrev4Weeks = StartOfWeek(today).AddDays(-28);
                     prevQuery = query.Where(p => p.DateReported >= startPrev4Weeks && p.DateReported < StartOfWeek(today));
                     break;
 
-                case "monthly":
-                    var startPrev4Months = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-7);
-                    var endPrev4Months = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-4).AddDays(-1);
-                    prevQuery = query.Where(p => p.DateReported >= startPrev4Months && p.DateReported <= endPrev4Months);
-                    break;
+                default: // daily
+                    var startPrev7Days = today.AddDays(-6).Date; // last 6 days + today = 7 days
+                    var endPrev7Days = today.Date;               // kasama ang today
+                    prevQuery = query.Where(p => p.DateReported.Date >= startPrev7Days && p.DateReported.Date <= endPrev7Days);
 
-                default:
-                    var startPrev7Days = today.AddDays(-13);
-                    var endPrev7Days = today.AddDays(-7);
-                    prevQuery = query.Where(p => p.DateReported >= startPrev7Days && p.DateReported <= endPrev7Days);
+
                     break;
             }
 
+            // Previous average
             var prevData = await _repository.GetGroupedDataAsync(prevQuery, filter.TimeRange);
-            var previousAvg = prevData.Any() ? prevData.Average(x => (double)x.AvgPrice) : 0;
+            double previousAvg = prevData.Any() ? prevData.Average(x => (double)x.AvgPrice) : 0;
 
             double percentChange = previousAvg > 0 ? ((currentAvg - previousAvg) / previousAvg) * 100 : 0;
 
+            // Most expensive / cheapest product
             var mostExpensive = await query.OrderByDescending(p => p.Price)
                                            .Select(p => new { p.Commodity.ProductName, p.Price, p.unit })
                                            .FirstOrDefaultAsync();
@@ -59,6 +76,7 @@ namespace WebApplication2.service
                                       .Select(p => new { p.Commodity.ProductName, p.Price, p.unit })
                                       .FirstOrDefaultAsync();
 
+            // Price changes per product
             var priceChanges = await query
                 .GroupBy(p => p.Commodity.ProductName)
                 .Select(g => new
@@ -95,6 +113,7 @@ namespace WebApplication2.service
             };
         }
 
+
         private DateTime StartOfWeek(DateTime dt)
         {
             int diff = (7 + (dt.DayOfWeek - DayOfWeek.Monday)) % 7;
@@ -103,6 +122,24 @@ namespace WebApplication2.service
 
 
 
+        public async Task<List<dynamic>> GetWeeklyChartDataAsync(PriceFilterRequest filter, int lastWeeks = 4)
+        {
+            // Kunin ang filtered query base sa category o filters
+            var query = _repository.GetFilteredQuery(filter);
+
+            // Tawagin ang repository method para sa weekly chart data
+            var weeklyData = await _repository.GetWeeklyChartDataAsync(query, lastWeeks);
+
+            // Transform para sa frontend
+            var transformed = weeklyData.Select(x => new
+            {
+                week = x.WeekStart.ToString("yyyy-MM-dd"), // ISO string
+                category = x.Category,
+                avgPrice = x.AvgPrice
+            }).ToList<dynamic>();
+
+            return transformed;
+        }
 
 
 
