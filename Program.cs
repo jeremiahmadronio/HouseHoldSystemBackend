@@ -33,6 +33,7 @@ builder.Services.AddScoped<ProductDietaryTagService>();
 builder.Services.AddScoped<PriceAnalyticsService>();
 builder.Services.AddScoped<CommoditiyService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<BudgetPlanService>();
 
 //AI Service
 builder.Services.AddSingleton<GeminiService>();
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IPriceReportRepository, PriceReportRepository>();
 builder.Services.AddScoped<IDietaryTagRepository, DietaryTagRepository>();
 builder.Services.AddScoped<IProductDietaryTagRepository, ProductDietaryTagRepository>();
 builder.Services.AddScoped<IPriceAnalyticsRepository, PriceAnalyticsRepository>();
+builder.Services.AddScoped<IBudgetPlanRepository, BudgetPlanRepository>();
 
 
 

@@ -22,6 +22,11 @@ namespace WebApplication2.data
         public DbSet<ProductDietaryTag> ProductDietaryTags { get; set; }
 
 
+        public DbSet<BudgetPlan> BudgetPlans { get; set; }
+        public DbSet<BudgetPlanItem> BudgetPlanItems { get; set; }
+        public DbSet<MealSuggestion> MealSuggestions { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

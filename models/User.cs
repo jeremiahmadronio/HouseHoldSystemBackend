@@ -15,5 +15,7 @@ namespace WebApplication2.models
         public byte[]? photo { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<BudgetPlan> BudgetPlans { get; set; } = new List<BudgetPlan>();
     }
 }

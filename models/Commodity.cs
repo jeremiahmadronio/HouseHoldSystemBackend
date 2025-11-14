@@ -7,8 +7,9 @@ namespace WebApplication2.models {
 		public int CommodityId { get; set; }
 
 		public required string ProductName { get; set; }
+        public string? LocalName { get; set; }
 
-		public  string? Category { get; set; }
+        public  string? Category { get; set; }
         public string? Specification { get; set; }
 
         public bool IsActive { get; set; } = true;
