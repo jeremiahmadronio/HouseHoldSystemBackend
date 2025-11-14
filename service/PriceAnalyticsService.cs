@@ -20,10 +20,10 @@ namespace WebApplication2.service
         {
             var query = _repository.GetFilteredQuery(filter);
 
-            // Kunin ang chart data
+            // === Chart Data ===
             var groupedData = await _repository.GetGroupedDataAsync(query, filter.TimeRange);
 
-            // Current average (latest month / latest period)
+            // === Current Average ===
             double currentAvg = 0;
             if (groupedData.Any())
             {
@@ -33,13 +33,13 @@ namespace WebApplication2.service
                     .Average(g => (double)g.AvgPrice);
             }
 
+            // === Previous Average Query ===
             IQueryable<ProductPrice> prevQuery;
             var today = DateTime.UtcNow.Date;
 
             switch (filter.TimeRange.ToLower())
             {
                 case "monthly":
-                    // Previous month
                     var firstDayThisMonth = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     var firstDayPrevMonth = firstDayThisMonth.AddMonths(-1);
                     var lastDayPrevMonth = firstDayThisMonth.AddDays(-1);
@@ -53,49 +53,67 @@ namespace WebApplication2.service
                     break;
 
                 default: // daily
-                    var startPrev7Days = today.AddDays(-6).Date; // last 6 days + today = 7 days
-                    var endPrev7Days = today.Date;               // kasama ang today
+                    var startPrev7Days = today.AddDays(-6).Date;
+                    var endPrev7Days = today.Date;
                     prevQuery = query.Where(p => p.DateReported.Date >= startPrev7Days && p.DateReported.Date <= endPrev7Days);
-
-
                     break;
             }
 
-            // Previous average
+            // === Previous Average ===
             var prevData = await _repository.GetGroupedDataAsync(prevQuery, filter.TimeRange);
             double previousAvg = prevData.Any() ? prevData.Average(x => (double)x.AvgPrice) : 0;
 
-            double percentChange = previousAvg > 0 ? ((currentAvg - previousAvg) / previousAvg) * 100 : 0;
+            double percentChange = previousAvg > 0
+                ? ((currentAvg - previousAvg) / previousAvg) * 100
+                : 0;
 
-            // Most expensive / cheapest product
+            // === Most Expensive / Cheapest ===
             var mostExpensive = await query.OrderByDescending(p => p.Price)
-                                           .Select(p => new { p.Commodity.ProductName, p.Price, p.unit })
-                                           .FirstOrDefaultAsync();
+                .Select(p => new { p.Commodity.ProductName, p.Price, p.unit })
+                .FirstOrDefaultAsync();
 
             var cheapest = await query.OrderBy(p => p.Price)
-                                      .Select(p => new { p.Commodity.ProductName, p.Price, p.unit })
-                                      .FirstOrDefaultAsync();
+                .Select(p => new { p.Commodity.ProductName, p.Price, p.unit })
+                .FirstOrDefaultAsync();
 
-            // Price changes per product
+            // ===================================================================  
+            //   FIXED PRICE CHANGE LOGIC  
+            //   Totoong latest & previous, no zero fallback  
+            // ===================================================================
+
             var priceChanges = await query
                 .GroupBy(p => p.Commodity.ProductName)
                 .Select(g => new
                 {
                     Product = g.Key,
                     Category = g.First().Commodity.Category,
-                    Previous = g.OrderBy(x => x.DateReported).Select(x => (double)x.Price).FirstOrDefault(),
-                    Current = g.OrderByDescending(x => x.DateReported).Select(x => (double)x.Price).FirstOrDefault()
+
+                    Prices = g.Where(x => x.Price > 0)
+                              .OrderByDescending(x => x.DateReported)
+                              .Select(x => new { x.Price, x.DateReported })
+                              .ToList()
                 })
                 .ToListAsync();
 
-            var withChange = priceChanges.Select(x => new
+            var withChange = priceChanges.Select(item =>
             {
-                x.Product,
-                x.Category,
-                x.Previous,
-                x.Current,
-                PercentChange = x.Previous > 0 ? ((x.Current - x.Previous) / x.Previous) * 100 : 0
-            }).ToList();
+                double? current = item.Prices.Count >= 1 ? (double?)item.Prices[0].Price : null;
+                double? previous = item.Prices.Count >= 2 ? (double?)item.Prices[1].Price : null;
+
+                double percent = (previous.HasValue && previous.Value > 0)
+                    ? ((current.Value - previous.Value) / previous.Value) * 100
+                    : 0;
+
+                return new
+                {
+                    item.Product,
+                    item.Category,
+                    Current = current,
+                    Previous = previous,
+                    PercentChange = percent
+                };
+            })
+            .ToList();
 
             var topIncrease = withChange.OrderByDescending(x => x.PercentChange).Take(5);
             var topDrop = withChange.OrderBy(x => x.PercentChange).Take(5);
@@ -112,6 +130,7 @@ namespace WebApplication2.service
                 ChartData = groupedData
             };
         }
+
 
 
         private DateTime StartOfWeek(DateTime dt)

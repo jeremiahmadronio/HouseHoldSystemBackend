@@ -249,7 +249,6 @@ namespace WebApplication2.service
             public string text { get; set; }
         }
 
-
         public async Task<List<DisplayProductPriceDTO>> GetAllProductPriceDisplayAsync()
         {
             var commodities = await _commodityRepo.GetAllCommoditiesAsync();
@@ -257,15 +256,18 @@ namespace WebApplication2.service
 
             foreach (var commodity in commodities)
             {
+                // KUHAIN lahat ng price entries (hindi lang dalawa)
                 var prices = await _priceRepo.GetLatestTwoByCommodityAsync(commodity.CommodityId);
 
-                // Filter out invalid data and sort DESC by date
+                // ORDER by NEWEST → OLDEST
                 prices = prices
                     .Where(p => p.DateReported != null)
                     .OrderByDescending(p => p.DateReported)
                     .ToList();
 
-                if (prices.Count == 0)
+                // NO VALID PRICE AT ALL
+                var latestPrice = prices.FirstOrDefault(p => p.Price > 0);
+                if (latestPrice == null)
                 {
                     result.Add(new DisplayProductPriceDTO
                     {
@@ -281,30 +283,14 @@ namespace WebApplication2.service
                     continue;
                 }
 
-                // ✅ Latest price = pinaka bagong may laman
-                var latestPriceEntry = prices.First();
-
-                // ✅ Hanapin ang "previous" base sa kasunod na date (kahit ilang araw pagitan)
-                ProductPrice? previousPriceEntry = null;
-                var latestDate = latestPriceEntry.DateReported.Date;
-
-                // Kumuha ng mga mas luma kaysa sa latest date, sorted descending (so newest older first)
-                var olderPrices = prices
-                    .Where(p => p.DateReported < latestDate)
+                // FIND TRUE PREVIOUS (first old price that is > 0)
+                var previousPrice = prices
+                    .Where(p => p.Price > 0 && p.DateReported < latestPrice.DateReported)
                     .OrderByDescending(p => p.DateReported)
-                    .ToList();
+                    .FirstOrDefault();
 
-                // Kung may mga mas luma, hanapin yung pinakamalapit na date (next earlier date na may laman)
-                if (olderPrices.Any())
-                {
-                    var nextEarlierDate = olderPrices.Max(p => p.DateReported);
-                    previousPriceEntry = olderPrices
-                        .Where(p => p.DateReported == nextEarlierDate)
-                        .FirstOrDefault();
-                }
-
-                decimal latest = latestPriceEntry?.Price ?? 0;
-                decimal? previous = previousPriceEntry?.Price;
+                decimal latest = latestPrice.Price;
+                decimal? previous = previousPrice?.Price;
 
                 string status = "N/A";
                 if (previous.HasValue)
@@ -319,11 +305,11 @@ namespace WebApplication2.service
                     id = commodity.CommodityId,
                     ProductName = commodity.ProductName,
                     Category = string.IsNullOrEmpty(commodity.Category) ? "N/A" : commodity.Category,
-                    Unit = latestPriceEntry?.unit ?? "N/A",
+                    Unit = latestPrice.unit ?? "N/A",
                     LatestPrice = latest,
                     PreviousPrice = previous,
                     Status = status,
-                    LatestPriceDate = latestPriceEntry?.DateReported
+                    LatestPriceDate = latestPrice.DateReported
                 });
             }
 
