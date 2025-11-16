@@ -11,95 +11,79 @@ namespace WebApplication2.service
     {
         private readonly IProductDietaryTagRepository _productDietaryTagRepository;
 
-
-
         public ProductDietaryTagService(IProductDietaryTagRepository productDietaryTagRepository)
         {
-           _productDietaryTagRepository = productDietaryTagRepository;
-
-
+            _productDietaryTagRepository = productDietaryTagRepository;
         }
 
-
+        // Kukunin lahat ng commodities kasama ang tags at latest price
         public async Task<IEnumerable<DisplayProductDietaryTagDTO>> GetAllProductsWithTagsAsync()
         {
-            var data = await _productDietaryTagRepository.GetAllProductsWithOptionalTagsAsync();
+            var commodities = await _productDietaryTagRepository.GetAllCommoditiesWithOptionalTagsAsync();
 
-            
-            var latestProducts = data
-                .GroupBy(pp => pp.CommodityId)
-                .Select(g => g
-                    .OrderByDescending(pp => pp.DateReported)
-                    .First()) 
-                .ToList();
-
-            var result = latestProducts.Select(pp => new DisplayProductDietaryTagDTO
+            var result = commodities.Select(c =>
             {
-                Id = pp.ProductPriceId,
-                ProductName = pp.Commodity.ProductName,
-                Category = pp.Commodity.Category,
-                LatestPrice = pp.Price,
-                DietaryTags = pp.ProductDietaryTags
-                                .Select(pdt => pdt.DietaryTag.Name)
-                                .ToList()
+                var latestPrice = c.Prices.OrderByDescending(p => p.DateReported).FirstOrDefault();
+
+                return new DisplayProductDietaryTagDTO
+                {
+                    Id = latestPrice?.ProductPriceId ?? 0,
+                    ProductName = c.ProductName,
+                    Category = c.Category,
+                    LatestPrice = latestPrice?.Price ?? 0,
+                    DietaryTags = c.ProductDietaryTags
+                                    .Select(pdt => pdt.DietaryTag.Name)
+                                    .ToList()
+                };
             });
 
             return result;
         }
 
-
-
-
-
-        public async Task UpdateProductTagsAsync(int productPriceId, List<int> tagIds)
+        // Update tags per commodity
+        public async Task UpdateCommodityTagsAsync(int commodityId, List<int> tagIds)
         {
-            var productPrice = await _productDietaryTagRepository.GetProductPriceWithTagsAsync(productPriceId);
-            if (productPrice == null) throw new Exception("Product not found");
+            var commodity = await _productDietaryTagRepository.GetCommodityWithTagsAsync(commodityId);
+            if (commodity == null) throw new Exception("Commodity not found");
 
-            var commodityId = productPrice.CommodityId;
+            // Clear existing tags
+            commodity.ProductDietaryTags.Clear();
 
-            var allPricesForCommodity = await _productDietaryTagRepository.GetAllProductPricesByCommodityAsync(commodityId);
-
-            foreach (var pp in allPricesForCommodity)
+            // Add new tags
+            foreach (var tagId in tagIds)
             {
-                pp.ProductDietaryTags.Clear();
-
-                foreach (var tagId in tagIds)
+                commodity.ProductDietaryTags.Add(new ProductDietaryTag
                 {
-                    pp.ProductDietaryTags.Add(new ProductDietaryTag
-                    {
-                        ProductPriceId = pp.ProductPriceId,
-                        DietaryTagId = tagId
-                    });
-                }
+                    CommodityId = commodity.CommodityId,
+                    DietaryTagId = tagId
+                });
             }
 
             await _productDietaryTagRepository.SaveChangesAsync();
         }
 
-
+        // Dashboard stats
         public async Task<(int totalProducts, int taggedProducts, int untaggedProducts, int totalTags)> GetDashboardStatsAsync()
         {
-            
             var totalProducts = await _productDietaryTagRepository.GetTotalUniqueCommoditiesAsync();
-
-           
             var taggedProducts = await _productDietaryTagRepository.GetTotalCommoditiesWithTagsAsync();
-
-           
             var untaggedProducts = totalProducts - taggedProducts;
-
-           
             var totalTags = await _productDietaryTagRepository.GetTotalUniqueTagsAsync();
 
             return (totalProducts, taggedProducts, untaggedProducts, totalTags);
         }
 
+        public async Task<Commodity> GetCommodityByProductPriceIdAsync(int productPriceId)
+        {
+            var commodities = await _productDietaryTagRepository.GetAllCommoditiesWithOptionalTagsAsync();
 
+            // Hanapin ang commodity kung saan nag-exist ang productPriceId
+            var commodity = commodities.FirstOrDefault(c =>
+                c.Prices.Any(p => p.ProductPriceId == productPriceId)
+            );
 
+            return commodity;
+        }
 
     }
-
-
 }
-

@@ -22,7 +22,7 @@ namespace WebApplication2.models
 
         public DateTime DateReported { get; set; } = DateTime.UtcNow;
 
-        public ICollection<ProductDietaryTag> ProductDietaryTags { get; set; } = new List<ProductDietaryTag>();
+        
     }
 
 }

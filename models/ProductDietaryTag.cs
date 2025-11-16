@@ -12,12 +12,12 @@ namespace WebApplication2.models
 
 
 
-		public int? ProductPriceId { get; set; }
-		public ProductPrice ProductPrice { get; set; }
+        public int? CommodityId { get; set; }
+        public Commodity Commodity { get; set; }
 
 
 
-		public int? DietaryTagId { get; set; }
+        public int? DietaryTagId { get; set; }
 		public DietaryTag DietaryTag { get; set; }
 
 

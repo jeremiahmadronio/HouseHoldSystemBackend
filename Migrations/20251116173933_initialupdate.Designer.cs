@@ -12,8 +12,8 @@ using WebApplication2.data;
 namespace WebApplication2.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251114080216_InitialBudgetPlan")]
-    partial class InitialBudgetPlan
+    [Migration("20251116173933_initialupdate")]
+    partial class initialupdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -91,8 +91,8 @@ namespace WebApplication2.Migrations
                     b.Property<int>("CommodityId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric");
@@ -267,17 +267,17 @@ namespace WebApplication2.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("DietaryTagId")
+                    b.Property<int?>("CommodityId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ProductPriceId")
+                    b.Property<int?>("DietaryTagId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DietaryTagId");
 
-                    b.HasIndex("ProductPriceId", "DietaryTagId")
+                    b.HasIndex("CommodityId", "DietaryTagId")
                         .IsUnique();
 
                     b.ToTable("ProductDietaryTags");
@@ -398,19 +398,19 @@ namespace WebApplication2.Migrations
 
             modelBuilder.Entity("WebApplication2.models.ProductDietaryTag", b =>
                 {
+                    b.HasOne("WebApplication2.models.Commodity", "Commodity")
+                        .WithMany("ProductDietaryTags")
+                        .HasForeignKey("CommodityId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("WebApplication2.models.DietaryTag", "DietaryTag")
                         .WithMany("ProductDietaryTags")
                         .HasForeignKey("DietaryTagId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("WebApplication2.models.ProductPrice", "ProductPrice")
-                        .WithMany("ProductDietaryTags")
-                        .HasForeignKey("ProductPriceId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                    b.Navigation("Commodity");
 
                     b.Navigation("DietaryTag");
-
-                    b.Navigation("ProductPrice");
                 });
 
             modelBuilder.Entity("WebApplication2.models.ProductPrice", b =>
@@ -446,6 +446,8 @@ namespace WebApplication2.Migrations
             modelBuilder.Entity("WebApplication2.models.Commodity", b =>
                 {
                     b.Navigation("Prices");
+
+                    b.Navigation("ProductDietaryTags");
                 });
 
             modelBuilder.Entity("WebApplication2.models.DietaryTag", b =>
@@ -461,11 +463,6 @@ namespace WebApplication2.Migrations
             modelBuilder.Entity("WebApplication2.models.PriceReport", b =>
                 {
                     b.Navigation("Prices");
-                });
-
-            modelBuilder.Entity("WebApplication2.models.ProductPrice", b =>
-                {
-                    b.Navigation("ProductDietaryTags");
                 });
 
             modelBuilder.Entity("WebApplication2.models.User", b =>

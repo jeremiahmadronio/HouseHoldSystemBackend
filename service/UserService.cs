@@ -35,24 +35,24 @@ namespace WebApplication2.service
             return _userRepository.EmailExists(email);
         
         }
-
         //login
-        public (bool Success, string? Role) Login(LoginDTO request)
+        public (bool Success, string? Role, Guid? UserId) Login(LoginDTO request)
         {
             var admin = _adminRepository.GetUserByEmail(request.email);
             if (admin != null && admin.password == request.password)
             {
-                return (true, "ADMIN");
+                return (true, "ADMIN", admin.id);
             }
 
             var user = _userRepository.GetUserByEmail(request.email);
             if (user != null && user.password == request.password)
             {
-                return (true, "USER");
+                return (true, "USER", user.Id);
             }
 
-            return (false, null);
+            return (false, null, null);
         }
+
 
         //create User
         public bool CreateUser(CreateUserDTO dto, out string message)

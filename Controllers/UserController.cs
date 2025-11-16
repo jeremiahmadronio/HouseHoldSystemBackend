@@ -46,7 +46,7 @@ namespace WebApplication2.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDTO request)
         {
-            var (success, role) = _userService.Login(request);
+            var (success, role, userId) = _userService.Login(request);
 
             if (!success)
             {
@@ -56,7 +56,8 @@ namespace WebApplication2.Controllers
             return Ok(new
             {
                 message = "Login successful",
-                role = role ?? "Uknown"
+                role = role ?? "Unknown",
+                userId = userId // null kung admin (optional)
             });
         }
 

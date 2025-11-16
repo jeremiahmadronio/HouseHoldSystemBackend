@@ -14,6 +14,7 @@ namespace WebApplication2.models {
 
         public bool IsActive { get; set; } = true;
         public ICollection<ProductPrice> Prices { get; set; } = new List<ProductPrice>();
+        public ICollection<ProductDietaryTag> ProductDietaryTags { get; set; } = new List<ProductDietaryTag>();
 
 
 

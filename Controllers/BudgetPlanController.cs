@@ -43,5 +43,42 @@ public async Task<IActionResult> GenerateBudgetPlan(Guid userId, [FromBody] Budg
     }
 }
 
+
+        [HttpGet("commodities/by-tag")]
+        public async Task<IActionResult> GetCommoditiesByTag([FromQuery] string tag)
+        {
+            if (string.IsNullOrWhiteSpace(tag))
+                return BadRequest(new { message = "Tag is required." });
+
+            try
+            {
+                var commodities = await _budgetPlanService.GetCommoditiesByDietaryTagAsync(tag);
+
+                if (commodities == null || commodities.Count == 0)
+                {
+                    return Ok(new
+                    {
+                        commodities = new List<object>(),
+                        message = "No commodities found for the selected dietary tag."
+                    });
+                }
+
+                return Ok(new
+                {
+                    commodities = commodities,
+                    message = "Commodities retrieved successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Server error: " + ex.Message });
+            }
+        }
+
+
+
+
+
+
     }
 }

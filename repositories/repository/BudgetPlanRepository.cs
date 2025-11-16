@@ -44,5 +44,18 @@ namespace WebApplication2.repositories.repository
         {
             await _context.SaveChangesAsync();
         }
+
+
+
+        public async Task<List<Commodity>> GetCommoditiesByDietaryTagAsync(string dietaryTagName)
+        {
+            return await _context.Commodities
+                .Include(c => c.Prices)
+                .Include(c => c.ProductDietaryTags)
+                    .ThenInclude(dt => dt.DietaryTag)
+                .Where(c => c.ProductDietaryTags
+                    .Any(dt => dt.DietaryTag.Name.ToLower() == dietaryTagName.ToLower()))
+                .ToListAsync();
+        }
     }
 }

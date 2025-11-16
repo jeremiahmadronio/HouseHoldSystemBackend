@@ -2,11 +2,14 @@
 using WebApplication2.dto.BudgetPlanDTO;
 using WebApplication2.models;
 using WebApplication2.repositories;
+using WebApplication2.data;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json;
+
 
 namespace WebApplication2.service
 {
@@ -15,17 +18,19 @@ namespace WebApplication2.service
         private readonly IBudgetPlanRepository _repo;
         private readonly GeminiService _gemini;
         private readonly bool _useMock;
+        private readonly ApplicationDbContext _context;
 
-        public BudgetPlanService(IBudgetPlanRepository repo, GeminiService gemini, bool useMock = false)
+        public BudgetPlanService(IBudgetPlanRepository repo, GeminiService gemini, ApplicationDbContext context, bool useMock = false)
         {
             _repo = repo;
             _gemini = gemini;
+            _context = context;
             _useMock = useMock;
         }
 
         public async Task<object> GenerateBudgetPlanAsync(Guid userId, BudgetPlanRequestDTO req, List<Commodity> commodities)
         {
-            // Auto-fill LocalName
+            // --- Auto-fill LocalName ---
             foreach (var c in commodities)
             {
                 if (string.IsNullOrWhiteSpace(c.LocalName))
@@ -41,31 +46,58 @@ namespace WebApplication2.service
                 }
             }
 
-            // Filter commodities by dietary tag if provided
-            if (req.DietaryTagId.HasValue)
+            // --- Get DietaryTag from string name ---
+            DietaryTag dietaryTag = null;
+            if (!string.IsNullOrWhiteSpace(req.DietaryTagId))
             {
-                foreach (var c in commodities)
+                string tagName = req.DietaryTagId.Trim().ToLower();
+                dietaryTag = await _context.DietaryTags
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(dt => dt.Name.ToLower() == tagName);
+            }
+            List<Commodity> generationList;
+
+            // If may dietary tag → use your DTO filtering + builder
+            if (!string.IsNullOrWhiteSpace(req.DietaryTagId))
+            {
+                var dtoFiltered = await GetCommoditiesByDietaryTagAsync(req.DietaryTagId);
+
+                if (dtoFiltered.Count == 0)
                 {
-                    c.Prices = c.Prices
-                        .Where(p => p.ProductDietaryTags.Any(d => d.DietaryTagId == req.DietaryTagId.Value))
-                        .ToList();
+                    generationList = new List<Commodity>();
                 }
+                else
+                {
+                    // Build commodities with LATEST PRICE only
+                    generationList = await BuildCommodityListForBudgetAsync(dtoFiltered);
+                }
+            }
+            else
+            {
+                // No tag → use provided list
+                generationList = commodities.ToList();
+            }
+
+            // fallback if no commodities match dietary tag
+            if (!generationList.Any())
+            {
+                generationList = commodities.ToList();
             }
 
             var plan = new BudgetPlan
             {
                 UserId = userId,
                 TotalBudget = req.TotalBudget,
-                DietaryTag = req.DietaryTagId.HasValue ? "Low-Carb" : null,
+                DietaryTag = dietaryTag?.Name,
                 CreatedAt = DateTime.UtcNow,
                 Items = new List<BudgetPlanItem>(),
                 MealSuggestions = new List<MealSuggestion>()
             };
 
             if (_useMock)
-                ApplyMock(plan, commodities);
+                ApplyMock(plan, generationList);
             else
-                await GenerateUsingGemini(plan, commodities);
+                await GenerateUsingGemini(plan, generationList);
 
             // Cap items to not exceed budget
             decimal currentTotal = 0;
@@ -87,14 +119,19 @@ namespace WebApplication2.service
                 plan.BudgetPlanId,
                 plan.TotalBudget,
                 plan.DietaryTag,
-                Items = plan.Items.Select(i => new
+                Items = plan.Items.Select(i =>
                 {
-                    i.CommodityId,
-                    i.Commodity.ProductName,
-                    i.Commodity.LocalName,
-                    i.Quantity,
-                    i.UnitPrice,
-                    TotalPrice = i.Quantity * i.UnitPrice
+                    var latestPrice = i.Commodity.Prices.OrderByDescending(p => p.DateReported).First();
+                    return new
+                    {
+                        i.CommodityId,
+                        i.Commodity.ProductName,
+                        i.Commodity.LocalName,
+                        i.Quantity,
+                        i.UnitPrice,
+                        Unit = latestPrice.unit,
+                        TotalPrice = i.Quantity * i.UnitPrice
+                    };
                 }).ToList(),
                 MealSuggestions = plan.MealSuggestions.Select(m => new
                 {
@@ -106,15 +143,22 @@ namespace WebApplication2.service
 
         private async Task GenerateUsingGemini(BudgetPlan plan, List<Commodity> commodities)
         {
+            var rnd = new Random();
+
             var available = commodities
                 .Where(c => c.Prices.Any())
-                .Select(c => new
+                .OrderBy(x => rnd.Next())
+                .Select(c =>
                 {
-                    c.CommodityId,
-                    c.ProductName,
-                    c.LocalName,
-                    c.Category,
-                    Price = c.Prices.OrderByDescending(p => p.DateReported).First().Price
+                    var latestPrice = c.Prices.OrderByDescending(p => p.DateReported).First();
+                    return new
+                    {
+                        c.CommodityId,
+                        c.ProductName,
+                        c.LocalName,
+                        Unit = latestPrice.unit,
+                        Price = latestPrice.Price
+                    };
                 })
                 .ToList();
 
@@ -126,29 +170,26 @@ You are a Filipino meal planning AI. Output MUST be valid JSON only.
 Budget: {plan.TotalBudget}
 Members: {plan.Members}
 
-Focus on categories: Fish, Rice, Pork Meat, Beef Meat, Chicken, Vegetables.
-Use products ONLY from this list: {jsonCommodities}.
-Generate 5-10 items max, with real prices.
-Ensure total cost does not exceed budget.
-Meals must be Filipino-style, realistic, and only use items generated.
+Use ONLY the following products (include LocalName and Unit in output): {jsonCommodities}.
+Generate 5-10 items max. Total cost must NOT exceed budget.
+Meals must use ONLY the items generated.
 
 For each meal:
 - Provide 'meal': the dish name.
-- Provide 'description': a simple step-by-step cooking instruction in Tagalog, like teaching someone to cook it. Example: 'Ihugas at timplahan ang tilapia, pagkatapos ay iprito sa mainit na mantika hanggang sa maging golden brown.'
+- Provide 'description': step-by-step cooking in Tagalog.
+- Only use ingredients from the generated items.
 
 Output format:
-
 {{
   ""items"": [
-    {{ ""name"": ""string"", ""quantity"": number, ""unitPrice"": number }}
+    {{ ""name"": ""string"", ""quantity"": number, ""unitPrice"": number, ""unit"": ""string"" }}
   ],
   ""meals"": [
     {{ ""meal"": ""string"", ""description"": ""string"" }}
   ]
 }}
 
-Use LocalName for all ingredients.
-Strict JSON only, no extra words.
+Strict JSON only. No extra words.
 ";
 
             string raw;
@@ -176,18 +217,11 @@ Strict JSON only, no extra words.
             try
             {
                 raw = raw.Trim();
-                if (raw.StartsWith("```json"))
-                    raw = raw.Substring(7).Trim();
-                if (raw.StartsWith("```"))
-                    raw = raw.Substring(3).Trim();
-                if (raw.EndsWith("```"))
-                    raw = raw.Substring(0, raw.Length - 3).Trim();
+                if (raw.StartsWith("```json")) raw = raw.Substring(7).Trim();
+                if (raw.StartsWith("```")) raw = raw.Substring(3).Trim();
+                if (raw.EndsWith("```")) raw = raw.Substring(0, raw.Length - 3).Trim();
 
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 var parsed = JsonSerializer.Deserialize<GeminiBudgetResponse>(raw, options);
 
                 if (parsed?.items != null)
@@ -198,15 +232,15 @@ Strict JSON only, no extra words.
                             item.name.Contains(x.ProductName, StringComparison.OrdinalIgnoreCase) ||
                             x.ProductName.Contains(item.name, StringComparison.OrdinalIgnoreCase));
 
-                        if (c == null) continue;
+                        if (c == null || !c.Prices.Any()) continue;
 
                         plan.Items.Add(new BudgetPlanItem
                         {
                             CommodityId = c.CommodityId,
-                            Commodity = c,
                             Quantity = item.quantity,
                             UnitPrice = item.unitPrice
                         });
+
                     }
                 }
 
@@ -226,25 +260,26 @@ Strict JSON only, no extra words.
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine("Parse error. Raw:\n" + raw);
-                Console.WriteLine(ex.Message);
+                ApplyMock(plan, commodities);
             }
         }
 
         private void ApplyMock(BudgetPlan plan, List<Commodity> commodities)
         {
-            var sample = commodities.Take(5).ToList();
+            var rnd = new Random();
+            var sample = commodities.Where(c => c.Prices.Any()).OrderBy(x => rnd.Next()).Take(5).ToList();
 
             foreach (var c in sample)
             {
+                var latestPrice = c.Prices.OrderByDescending(p => p.DateReported).First();
                 plan.Items.Add(new BudgetPlanItem
                 {
                     CommodityId = c.CommodityId,
                     Commodity = c,
                     Quantity = 1,
-                    UnitPrice = c.Prices.First().Price
+                    UnitPrice = latestPrice.Price
                 });
             }
 
@@ -255,6 +290,71 @@ Strict JSON only, no extra words.
                 BudgetPlan = plan
             });
         }
+
+
+
+
+
+
+
+
+
+
+        public async Task<List<CommodityDTO>> GetCommoditiesByDietaryTagAsync(string dietaryTagName)
+        {
+            if (string.IsNullOrWhiteSpace(dietaryTagName))
+                return new List<CommodityDTO>();
+
+            string tagName = dietaryTagName.Trim().ToLower();
+
+            var filteredCommodities = await _context.Commodities
+                .Include(c => c.ProductDietaryTags)
+                    .ThenInclude(dt => dt.DietaryTag)
+                .Where(c => c.ProductDietaryTags
+                    .Any(dt => dt.DietaryTag.Name.ToLower() == tagName))
+                .ToListAsync();
+
+            // ✔ Convert to DTO (so walang cycle)
+            var dtoList = filteredCommodities.Select(c => new CommodityDTO
+            {
+                CommodityId = c.CommodityId,
+                ProductName = c.ProductName,
+                LocalName = c.LocalName,
+                Category = c.Category
+            }).ToList();
+
+            return dtoList;
+        }
+
+
+
+        public async Task<List<Commodity>> BuildCommodityListForBudgetAsync(List<CommodityDTO> dtoList)
+        {
+            var ids = dtoList.Select(d => d.CommodityId).ToList();
+
+            return await _context.Commodities
+                .Include(c => c.Prices)
+                .Where(c => ids.Contains(c.CommodityId))
+                .Select(c => new Commodity
+                {
+                    CommodityId = c.CommodityId,
+                    ProductName = c.ProductName,
+                    LocalName = c.LocalName,
+                    Category = c.Category,
+                    Specification = c.Specification,
+                    IsActive = c.IsActive,
+                    Prices = c.Prices
+                        .OrderByDescending(p => p.DateReported)
+                        .Take(1)
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
+
+
+
+
     }
 
     public class GeminiBudgetResponse
@@ -268,6 +368,7 @@ Strict JSON only, no extra words.
         public string name { get; set; }
         public decimal quantity { get; set; }
         public decimal unitPrice { get; set; }
+        public string unit { get; set; }
     }
 
     public class GeminiMeal

@@ -35,25 +35,29 @@ namespace WebApplication2.data
                 .HasIndex(u => u.email)
                 .IsUnique();
 
-
+            // ProductDietaryTag configuration
             modelBuilder.Entity<ProductDietaryTag>()
-         .HasKey(pd => pd.Id);
+                .HasKey(pd => pd.Id);
 
+            // Link ProductDietaryTag to Commodity (instead of ProductPrice)
             modelBuilder.Entity<ProductDietaryTag>()
-                .HasOne(pd => pd.ProductPrice)
-                .WithMany(p => p.ProductDietaryTags)
-                .HasForeignKey(pd => pd.ProductPriceId)
+                .HasOne(pd => pd.Commodity)
+                .WithMany(c => c.ProductDietaryTags)
+                .HasForeignKey(pd => pd.CommodityId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Link ProductDietaryTag to DietaryTag
             modelBuilder.Entity<ProductDietaryTag>()
                 .HasOne(pd => pd.DietaryTag)
                 .WithMany(d => d.ProductDietaryTags)
                 .HasForeignKey(pd => pd.DietaryTagId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Unique constraint per commodity + tag
             modelBuilder.Entity<ProductDietaryTag>()
-                .HasIndex(pd => new { pd.ProductPriceId, pd.DietaryTagId })
+                .HasIndex(pd => new { pd.CommodityId, pd.DietaryTagId })
                 .IsUnique();
         }
+
     }
 }

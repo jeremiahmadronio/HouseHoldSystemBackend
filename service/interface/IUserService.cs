@@ -11,7 +11,9 @@ public interface IUserService
     //verify email
     bool verifyEmail(string email);
     //login
-    (bool Success, string? Role) Login(LoginDTO request);
+
+
+    (bool Success, string? Role, Guid? UserId) Login(LoginDTO request);
 
     //createuser
     bool CreateUser(CreateUserDTO dto, out string message);

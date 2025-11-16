@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication2.service;
 
@@ -35,7 +35,14 @@ namespace WebApplication2.Controllers
         {
             try
             {
-                await _productDietaryService.UpdateProductTagsAsync(productPriceId, dto.TagIds);
+                // 🔹 Lookup the CommodityId using the ProductPriceId
+                var commodity = await _productDietaryService.GetCommodityByProductPriceIdAsync(productPriceId);
+                if (commodity == null)
+                    return NotFound(new { error = "Commodity not found for the given ProductPriceId." });
+
+                // 🔹 Update tags for the commodity
+                await _productDietaryService.UpdateCommodityTagsAsync(commodity.CommodityId, dto.TagIds);
+
                 return Ok(new { message = "Tags updated successfully." });
             }
             catch (Exception ex)
@@ -43,6 +50,7 @@ namespace WebApplication2.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
 
 
         [HttpGet("Stats")]

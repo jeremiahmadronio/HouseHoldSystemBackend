@@ -1,20 +1,19 @@
 using WebApplication2.models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace WebApplication2.repositories;
-
-public interface IProductDietaryTagRepository
+namespace WebApplication2.repositories
 {
+    public interface IProductDietaryTagRepository
+    {
+        Task<IEnumerable<Commodity>> GetAllCommoditiesWithOptionalTagsAsync();
+        Task<Commodity> GetCommodityWithTagsAsync(int commodityId);
+        Task SaveChangesAsync();
+        Task<int> GetTotalUniqueCommoditiesAsync();
+        Task<int> GetTotalCommoditiesWithTagsAsync();
+        Task<int> GetTotalCommoditiesWithoutTagsAsync();
+        Task<int> GetTotalUniqueTagsAsync();
 
-    Task<IEnumerable<ProductPrice>> GetAllProductsWithOptionalTagsAsync();
 
-    Task<IEnumerable<ProductPrice>> GetAllProductPricesByCommodityAsync(int commodityId);
-
-
-    Task<ProductPrice> GetProductPriceWithTagsAsync(int productPriceId);
-    Task SaveChangesAsync();
-
-    Task<int> GetTotalUniqueCommoditiesAsync();
-    Task<int> GetTotalCommoditiesWithTagsAsync();
-    Task<int> GetTotalCommoditiesWithoutTagsAsync();
-    Task<int> GetTotalUniqueTagsAsync();
+    }
 }
