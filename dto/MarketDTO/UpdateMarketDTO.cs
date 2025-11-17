@@ -1,6 +1,6 @@
 namespace WebApplication2.dto.MarketDTO
 {
-    public class CreateMarketDTO
+    public class UpdateMarketDTO
     {
         public string MarketName { get; set; }
         public string MarketDescription { get; set; }
@@ -8,5 +8,6 @@ namespace WebApplication2.dto.MarketDTO
         public TimeSpan OpeningTime { get; set; }
         public TimeSpan ClosingTime { get; set; }
         public decimal Ratings { get; set; }
+        public bool IsActive { get; set; }
     }
 }

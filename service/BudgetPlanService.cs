@@ -182,7 +182,7 @@ Use ONLY the following products (include LocalName and Unit in output): {jsonCom
 For each meal:
 - Provide 'meal': the dish name.
 - Provide 'description': step-by-step cooking instructions in Tagalog.
-- Only use ingredients from the generated items.
+- Only use ingredients from the generated items.            
 
 
 Output format:
