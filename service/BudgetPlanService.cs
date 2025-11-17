@@ -171,13 +171,19 @@ Budget: {plan.TotalBudget}
 Members: {plan.Members}
 
 Use ONLY the following products (include LocalName and Unit in output): {jsonCommodities}.
-Generate 5-10 items max. Total cost must NOT exceed budget.
-Meals must use ONLY the items generated.
+- Generate 5-10 items maximum.
+- Total cost must NOT exceed the budget.
+- Meals must use ONLY the items generated.
+- Limit quantity per item to a maximum of 2 kg.
+- Always include Rice, but do not exceed 2 kg.
+- Balance the rest of the ingredients across at least 3–5 dishes.
+- If there is leftover budget, add additional items to maximize variety.
 
 For each meal:
 - Provide 'meal': the dish name.
-- Provide 'description': step-by-step cooking in Tagalog.
+- Provide 'description': step-by-step cooking instructions in Tagalog.
 - Only use ingredients from the generated items.
+
 
 Output format:
 {{
@@ -210,6 +216,9 @@ Strict JSON only. No extra words.
             }
 
             ParseJson(plan, commodities, raw);
+
+         
+
         }
 
         private void ParseJson(BudgetPlan plan, List<Commodity> commodities, string raw)
@@ -295,7 +304,25 @@ Strict JSON only. No extra words.
 
 
 
+        private async Task<List<MealSuggestion>> GetMealsFromCategoryRecipesAsync(List<Commodity> commodities)
+        {
+            var recipeCommodities = commodities
+                .Where(c => !string.IsNullOrWhiteSpace(c.Category) && c.Category.Equals("Recipe", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
+            var mealSuggestions = new List<MealSuggestion>();
+
+            foreach (var c in recipeCommodities)
+            {
+                mealSuggestions.Add(new MealSuggestion
+                {
+                    Name = c.LocalName ?? c.ProductName,
+                    Description = $"Gamitin ang {c.ProductName} sa pagluluto ng masarap na ulam.",
+                });
+            }
+
+            return mealSuggestions;
+        }
 
 
 
@@ -314,7 +341,6 @@ Strict JSON only. No extra words.
                     .Any(dt => dt.DietaryTag.Name.ToLower() == tagName))
                 .ToListAsync();
 
-            // ✔ Convert to DTO (so walang cycle)
             var dtoList = filteredCommodities.Select(c => new CommodityDTO
             {
                 CommodityId = c.CommodityId,
