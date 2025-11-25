@@ -24,17 +24,21 @@ namespace WebApplication2.service
         private readonly IProductPriceRepository _priceRepo;
         private readonly IPriceReportRepository _reportRepo;
         private readonly IMarketRepository _marketRepo;
+        private readonly IUserFavoriteRepository _repo;
+
 
         public ProductsService(
             ICommodityRepository commodityRepo,
             IProductPriceRepository priceRepo,
             IPriceReportRepository reportRepo,
-            IMarketRepository marketRepo)
+            IMarketRepository marketRepo,
+            IUserFavoriteRepository repo)
         {
             _commodityRepo = commodityRepo;
             _priceRepo = priceRepo;
             _reportRepo = reportRepo;
             _marketRepo = marketRepo;
+            _repo = repo;
         }
 
         // ✅ Detects measurement unit
@@ -442,8 +446,102 @@ namespace WebApplication2.service
 
 
 
+        public async Task<List<DisplayProductInfoDTO>> GetAllProductsDisplayInfoWithFavoritesAsync(Guid userId)
+        {
+            var commodities = await _commodityRepo.GetAllCommoditiesAsync();
+            var userFavorites = await _repo.GetUserFavoritesAsync(userId);
+            var favoriteIds = userFavorites.Select(f => f.CommodityId).ToHashSet();
+
+            var result = new List<DisplayProductInfoDTO>();
+
+            foreach (var commodity in commodities)
+            {
+                var prices = await _priceRepo.GetLatestTwoByCommodityAsync(commodity.CommodityId);
+                if (prices == null || prices.Count == 0) continue;
+
+                var latest = prices.OrderByDescending(p => p.DateReported).First();
+                var previous = prices.Count > 1 ? prices.OrderByDescending(p => p.DateReported).Skip(1).First() : null;
+
+                string? percentageChange = null;
+                if (previous != null)
+                {
+                    if (previous.Price == 0)
+                        percentageChange = "+∞%";
+                    else
+                    {
+                        var changePercent = ((latest.Price - previous.Price) / previous.Price) * 100;
+                        percentageChange = changePercent >= 0 ? $"+{changePercent:F2}%" : $"{changePercent:F2}%";
+                    }
+                }
+
+                result.Add(new DisplayProductInfoDTO
+                {
+                    CommodityId = commodity.CommodityId,
+                    ProductName = commodity.ProductName,
+                    LocalName = commodity.LocalName ?? "",
+                    Category = commodity.Category ?? "",
+                    LatestPrice = latest.Price,
+                    Unit = latest.unit,
+                    DateReported = latest.DateReported,
+                    PercentageChange = percentageChange,
+                    IsFavorite = favoriteIds.Contains(commodity.CommodityId) // ✅ mark favorite
+                });
+            }
+
+            return result;
+        }
 
 
+
+        public async Task<List<DisplayProductInfoDTO>> GetUserFavoritesDisplayAsync(Guid userId)
+        {
+            var userFavorites = await _repo.GetUserFavoritesAsync(userId);
+
+            if (userFavorites == null || !userFavorites.Any())
+                return new List<DisplayProductInfoDTO>();
+
+            var favoriteIds = userFavorites.Select(f => f.CommodityId).ToHashSet();
+
+            // Fetch only favorites
+            var commodities = await _commodityRepo.GetAllCommoditiesByIdsAsync(favoriteIds);
+            var result = new List<DisplayProductInfoDTO>();
+
+            foreach (var commodity in commodities)
+            {
+                var prices = await _priceRepo.GetLatestTwoByCommodityAsync(commodity.CommodityId);
+                if (prices == null || prices.Count == 0) continue;
+
+                var latest = prices.OrderByDescending(p => p.DateReported).First();
+                var previous = prices.Count > 1 ? prices.OrderByDescending(p => p.DateReported).Skip(1).First() : null;
+
+                string? percentageChange = null;
+                if (previous != null)
+                {
+                    if (previous.Price == 0)
+                        percentageChange = "+∞%";
+                    else
+                    {
+                        var changePercent = ((latest.Price - previous.Price) / previous.Price) * 100;
+                        percentageChange = changePercent >= 0 ? $"+{changePercent:F2}%" : $"{changePercent:F2}%";
+                    }
+                }
+
+                result.Add(new DisplayProductInfoDTO
+                {
+                    CommodityId = commodity.CommodityId,
+                    ProductName = commodity.ProductName,
+                    LocalName = commodity.LocalName ?? "",
+                    Category = commodity.Category ?? "",
+                    LatestPrice = latest.Price,
+                    Unit = latest.unit,
+                    DateReported = latest.DateReported,
+                    PercentageChange = percentageChange,
+                    IsFavorite = true
+                });
+            }
+
+            return result;
+        }
 
 
 

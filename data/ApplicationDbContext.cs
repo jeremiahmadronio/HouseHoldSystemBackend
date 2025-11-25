@@ -25,6 +25,7 @@ namespace WebApplication2.data
         public DbSet<BudgetPlan> BudgetPlans { get; set; }
         public DbSet<BudgetPlanItem> BudgetPlanItems { get; set; }
         public DbSet<MealSuggestion> MealSuggestions { get; set; }
+        public DbSet<UserFavorite> UserFavorites { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -57,6 +58,20 @@ namespace WebApplication2.data
             modelBuilder.Entity<ProductDietaryTag>()
                 .HasIndex(pd => new { pd.CommodityId, pd.DietaryTagId })
                 .IsUnique();
+
+
+            modelBuilder.Entity<UserFavorite>()
+          .HasOne(uf => uf.User)
+          .WithMany(u => u.Favorites)
+          .HasForeignKey(uf => uf.UserId)
+          .OnDelete(DeleteBehavior.Cascade);  // ⭐ AUTO DELETE WHEN USER IS DELETED
+
+            modelBuilder.Entity<UserFavorite>()
+                .HasOne(uf => uf.Commodity)
+                .WithMany(c => c.FavoritedByUsers) // ✅ Dito ang tamang property
+                .HasForeignKey(uf => uf.CommodityId)
+                .OnDelete(DeleteBehavior.Cascade);  // ⭐ AUTO DELETE WHEN COMMODITY IS DELETED
+
         }
 
     }

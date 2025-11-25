@@ -50,21 +50,20 @@ namespace WebApplication2.service
         {
             var commodities = await _commodityRepo.GetAllCommoditiesAsync();
 
-            // Flatten lahat ng tags at group by tag name
+            // Group by Category
             var grouped = commodities
-                .SelectMany(c => c.ProductDietaryTags) // lahat ng tags sa commodity
-                .Where(pdt => pdt.DietaryTag != null)
-                .GroupBy(pdt => pdt.DietaryTag.Name)
+                .Where(c => !string.IsNullOrEmpty(c.Category)) 
+                .GroupBy(c => c.Category)
                 .Select(g => new CategoryDistributionDTO
                 {
                     Name = g.Key!,
-                    Value = g.Count() // bilang ng Commodity na may tag na ito
+                    Value = g.Count() 
                 })
                 .ToList();
 
-
             return grouped;
         }
+
 
         public async Task<List<CategoryDistributionDTO>> GetDietaryTagDistributionAsync()
         {

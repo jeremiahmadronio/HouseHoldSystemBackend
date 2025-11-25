@@ -117,5 +117,35 @@ namespace WebApplication2.Controllers
         }
 
 
+
+
+
+
+
+        [HttpGet("display-info/{userId}")]
+        public async Task<ActionResult<List<DisplayProductInfoDTO>>> GetAllProductsDisplayInfoForUser(Guid userId)
+        {
+            var products = await _productsService.GetAllProductsDisplayInfoWithFavoritesAsync(userId);
+
+            if (products == null || !products.Any())
+                return NotFound("Walang products na ma-display.");
+
+            return Ok(products);
+        }
+
+
+
+        [HttpGet("display-favorites/{userId}")]
+        public async Task<ActionResult<List<DisplayProductInfoDTO>>> GetUserFavoriteProducts(Guid userId)
+        {
+            var favorites = await _productsService.GetUserFavoritesDisplayAsync(userId);
+
+            if (favorites == null || !favorites.Any())
+                return NotFound("Walang favorite products.");
+
+            return Ok(favorites);
+        }
+
+
     }
 }

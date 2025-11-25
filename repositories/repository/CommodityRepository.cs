@@ -64,5 +64,15 @@ namespace WebApplication2.repositories.repository
                 .ToListAsync();
         }
 
+
+        public async Task<List<Commodity>> GetAllCommoditiesByIdsAsync(IEnumerable<int> ids)
+        {
+            return await _context.Commodities
+                                 .Where(c => ids.Contains(c.CommodityId))
+                                 .ToListAsync();
+        }
+
+
+
     }
 }

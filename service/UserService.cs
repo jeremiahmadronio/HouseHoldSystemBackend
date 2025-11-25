@@ -88,19 +88,46 @@ namespace WebApplication2.service
         }
 
 
+        // ⚠️ ASSUMPTION: You have installed a hashing library like BCrypt.Net-Core.
 
+        public bool ChangePassword(Guid id, String currentPassword, String newPassword)
+        {
+            // 1. Fetch user by ID
+            var user = _userRepository.GetUserById(id);
 
-        public bool ResetPassword(String email, String password) {
+            if (user == null)
+            {
+                // Fail if user not found
+                return false;
+            }
 
-            var user = _userRepository.GetUserByEmail(email);
+            // 2. SECURITY CHECK: Verify the current password
+            // If passwords were securely hashed:
+            // bool isCurrentPasswordCorrect = BCrypt.Net.BCrypt.Verify(currentPassword, user.password); 
 
-            if (user == null) return false;
+            // Since your current system stores PLAINTEXT:
+            bool isCurrentPasswordCorrect = (currentPassword == user.password);
 
-            user.password = password;
+            if (!isCurrentPasswordCorrect)
+            {
+                // Fail if current password does not match
+                return false;
+            }
+
+            // 3. CRITICAL: Hash the new password before storing it (Industry Standard)
+            // You MUST implement hashing here.
+            // user.password = BCrypt.Net.BCrypt.HashPassword(newPassword); 
+
+            // For now, using your existing PLAINTEXT assignment (TEMPORARY & INSECURE):
+            user.password = newPassword;
+
+            // 4. Save changes
             _userRepository.UpdateUser(user);
 
             return true;
         }
+
+
 
 
         public UserProfileDTO? GetUserProfile(String email) {
@@ -139,26 +166,88 @@ namespace WebApplication2.service
 
 
 
-        public bool DeleteUserByUsername(string username, out string message)
+        // Inside WebApplication2.service/UserService.cs
+
+        // ✅ NEW/REFACTORED DELETE METHOD
+        public bool DeleteUserById(Guid id, out string message)
         {
-            var user = _userRepository.GetUserByUsername(username);
+            // 1. Find user by ID (instead of username)
+            var user = _userRepository.GetUserById(id);
+
             if (user == null)
             {
                 message = "User not found";
                 return false;
             }
 
+            // 2. Delete the user
             _userRepository.DeleteUser(user);
+
             message = "User deleted successfully";
             return true;
         }
 
+        // NOTE: You can now remove the old DeleteUserByUsername method if it's no longer used.
 
 
 
+        // We need to update the interface signature:
+        // public UserProfileResult? GetUserProfileById(Guid id);
+
+        public UserProfileResult? GetUserProfileById(Guid id)
+        {
+            var user = _userRepository.GetUserById(id);
+
+            if (user == null)
+                return null;
+
+            // ✅ FINAL FIX: Project to a defined record structure 
+            return new UserProfileResult(
+                Id: user.Id,
+                Username: user.username,
+                Email: user.email,
+                Phone: user.phone
+            );
+        }
 
 
+        // ✅ FILE: UserService.cs (Implementation)
 
+        // ✅ FILE: UserService.cs (Implementation) - Conditional Update
 
+        public bool UpdateUserProfile(UpdateProfileDTO dto, out string message)
+        {
+            // 1. Fetch user by ID
+            var user = _userRepository.GetUserById(dto.Id);
+            if (user == null)
+            {
+                message = "User not found";
+                return false;
+            }
+
+            // 2. Assign updated profile values (ONLY IF A NEW VALUE IS PROVIDED)
+            if (!string.IsNullOrEmpty(dto.Username))
+            {
+                user.username = dto.Username;
+            }
+
+            // NOTE: Use dto.Email != null to allow the client to explicitly set email to NULL 
+            // if your database allows it. If not, use string.IsNullOrEmpty.
+            if (dto.Email != null)
+            {
+                user.email = dto.Email;
+            }
+
+            if (dto.Phone != null)
+            {
+                user.phone = dto.Phone;
+            }
+
+            // 3. Save changes
+            _userRepository.UpdateUser(user);
+
+            message = "User profile updated successfully";
+            return true;
+        }
     }
 }

@@ -58,6 +58,13 @@ namespace WebApplication2.repositories.repository
             _context.Users.Remove(user);
             _context.SaveChanges();
         }
+        public User? GetUserById(Guid id)
+        {
+            return _context.Users.Find(id);
+
+            // Alternatively, using FirstOrDefault:
+            // return _context.Users.FirstOrDefault(u => u.Id == id);
+        }
 
 
         public int? GetTotalUser() { 

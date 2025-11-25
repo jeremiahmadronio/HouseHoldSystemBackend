@@ -17,5 +17,7 @@ namespace WebApplication2.models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<BudgetPlan> BudgetPlans { get; set; } = new List<BudgetPlan>();
+        public ICollection<UserFavorite> Favorites { get; set; } = new List<UserFavorite>();
+
     }
 }

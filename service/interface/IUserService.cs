@@ -21,7 +21,7 @@ public interface IUserService
     bool CreateUsers(CreateUserAdminDTO dto, out string message);
 
     //resetPassword
-    bool ResetPassword(String email , String password);
+    bool ChangePassword(Guid id, String currentPassword, String newPassword);
 
     //display user by email
     UserProfileDTO? GetUserProfile(string email);
@@ -30,7 +30,12 @@ public interface IUserService
     bool UpdateUserInfo(EditUserDTO dto, out string message);
 
     //delete user
-    bool DeleteUserByUsername(string username, out string message);
+    bool DeleteUserById(Guid id, out string message);
+
+    // Change the signature to include Id (Guid)
+    UserProfileResult? GetUserProfileById(Guid id);
+
+    bool UpdateUserProfile(UpdateProfileDTO dto, out string message);
 
 
 
