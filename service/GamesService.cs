@@ -25,7 +25,6 @@ namespace WebApplication2.service
 
                 if (!string.IsNullOrEmpty(dto.photo))
                 {
-                    // If may "data:image/png;base64," part, remove it
                     var base64Data = dto.photo.Contains(",")
                         ? dto.photo.Split(',')[1]
                         : dto.photo;
